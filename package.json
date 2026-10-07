@@ -1,0 +1,23 @@
+{
+  "name": "qlyvora",
+  "version": "0.1.0",
+  "private": true,
+  "workspaces": ["client", "server", "shared"],
+  "scripts": {
+    "dev": "npm run dev:client & npm run dev:server",
+    "dev:client": "npm --workspace client run dev",
+    "dev:server": "npm --workspace server run dev",
+    "build": "npm run build:client && npm run build:server",
+    "build:client": "npm --workspace client run build",
+    "build:server": "npm --workspace server run build",
+    "test": "npm run test:client && npm run test:server",
+    "test:client": "npm --workspace client run test",
+    "test:server": "npm --workspace server run test"
+  },
+  "devDependencies": {
+    "typescript": "^5.5.0",
+    "eslint": "^9.0.0",
+    "prettier": "^3.3.0",
+    "concurrently": "^8.2.2"
+  }
+}
