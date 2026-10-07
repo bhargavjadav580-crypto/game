@@ -23,3 +23,15 @@
 | 2 | Host starts game | Transition to STARTING then QUESTION_ACTIVE | Synchronized transitions across both clients | **PASS** | `server/test/integration.test.ts` |
 | 3 | Privacy validation | `correctIndex` NOT sent during active question | `correctIndex === undefined` | **PASS** | `server/test/integration.test.ts` |
 | 4 | Answers & early-close | Both answer early, skip remaining timer to REVEAL | Moved to REVEAL in < 350ms with correctIndex included | **PASS** | `server/test/integration.test.ts` |
+
+## Browser End-to-End Tests (Layer 3 — Multi-Browser Playwright)
+
+| # | Scenario | Expected | Actual | Pass/Fail | Evidence |
+|---|----------|----------|--------|-----------|----------|
+| 1 | Room Creation & Code Generation | Host creates room, receives 5-char code | Code displayed in Lobby | **PASS** | `docs/evidence/e2e_01_playerA_lobby.png` |
+| 2 | Multiplayer Join & Sync | Player B enters room code from separate mobile context | Both players visible in lobby in real-time | **PASS** | `docs/evidence/e2e_02_both_in_lobby.png` |
+| 3 | Synchronized 3-2-1 Countdown | Host starts game; both screens show animated countdown | Countdown in sync on desktop and mobile | **PASS** | `docs/evidence/e2e_03_countdown.png` |
+| 4 | Question Synchrony & Answer Locking | Both players receive identical question & options | Options locked on click with tactile 3D feedback | **PASS** | Console assertion + test logs |
+| 5 | Early-Close & Reveal Transition | Timer immediately ends when both players answer | Skips remaining 8s timer straight to Reveal with correct answer badge | **PASS** | `docs/evidence/e2e_04_reveal_phase.png` |
+| 6 | Live Scoreboard & Rank Computation | Scoreboard reflects speed bonus and accuracy | Player rankings and score points displayed | **PASS** | `docs/evidence/e2e_05_scoreboard.png` |
+| 7 | Mid-game Reconnection & Refresh | Player B reloads browser tab during active game | Reconnected back into active room state using session token | **PASS** | `docs/evidence/e2e_06_playerB_reconnected.png` |
