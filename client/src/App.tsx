@@ -3,6 +3,7 @@ import WelcomePage from './pages/WelcomePage';
 import CreatePage from './pages/CreatePage';
 import JoinPage from './pages/JoinPage';
 import LobbyPage from './pages/LobbyPage';
+import GamePage from './pages/GamePage';
 
 export default function App() {
   return (
@@ -12,6 +13,7 @@ export default function App() {
         <Route path="/create" element={<CreatePage />} />
         <Route path="/join" element={<JoinPage />} />
         <Route path="/lobby/:code" element={<LobbyPage />} />
+        <Route path="/game/:code" element={<GamePage />} />
       </Routes>
     </BrowserRouter>
   );

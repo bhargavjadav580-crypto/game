@@ -30,6 +30,13 @@ export default function LobbyPage() {
     }
   }, [snapshot, code, navigate, rejoinRoom]);
 
+  // Navigate to game view if game starts
+  useEffect(() => {
+    if (snapshot && snapshot.phase !== 'WAITING') {
+      navigate(`/game/${code}`);
+    }
+  }, [snapshot?.phase, code, navigate]);
+
   if (!snapshot || snapshot.phase !== 'WAITING') {
     return (
       <main className="page-center">

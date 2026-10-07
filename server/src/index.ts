@@ -105,6 +105,36 @@ io.on('connection', (socket) => {
     }
   });
 
+  socket.on('game:start', (ack) => {
+    try {
+      const result = roomManager.handleStartGame(socket);
+      ack(result);
+    } catch (err) {
+      console.error('[game:start] Error:', err);
+      ack({ ok: false, error: 'Server error', code: 'SERVER_ERROR' });
+    }
+  });
+
+  socket.on('answer:submit', (data, ack) => {
+    try {
+      const result = roomManager.handleSubmitAnswer(socket, data);
+      ack(result);
+    } catch (err) {
+      console.error('[answer:submit] Error:', err);
+      ack({ ok: false, error: 'Server error', code: 'SERVER_ERROR' });
+    }
+  });
+
+  socket.on('game:rematch', (ack) => {
+    try {
+      const result = roomManager.handleRematch(socket);
+      ack(result);
+    } catch (err) {
+      console.error('[game:rematch] Error:', err);
+      ack({ ok: false, error: 'Server error', code: 'SERVER_ERROR' });
+    }
+  });
+
   socket.on('disconnect', (reason) => {
     console.log(`[Socket] Disconnected: ${socket.id} (${reason})`);
     roomManager.handleDisconnect(socket);

@@ -1,34 +1,37 @@
 import crypto from 'node:crypto';
 import { Server, Socket } from 'socket.io';
 import type { ClientToServerEvents, ServerToClientEvents, InterServerEvents, SocketData } from '../../../shared/src/protocol.js';
-import type { RoomSnapshot, PublicPlayer, AckResponse, GamePhase } from '../../../shared/src/types.js';
-import { GAME_CONSTANTS } from '../../../shared/src/config.js';
-import type { Room, PlayerState, RoomStore } from './RoomStore.js';
+import type { RoomSnapshot, PublicPlayer, AckResponse } from '../../../shared/src/types.js';
+import { GAME_CONSTANTS, PHASE_DURATIONS_MS } from '../../../shared/src/config.js';
+import type { Room, PlayerState, RoomStore, AnswerState } from './RoomStore.js';
 import { generateRoomCode } from './roomCodes.js';
-import { validateName, validateRoomCode } from '../security/validation.js';
+import { validateName, validateRoomCode, validateOptionIndex, validateQuestionId } from '../security/validation.js';
+import { calculateScore } from '../game/scoring.js';
+import type { QuestionProvider } from '../questions/QuestionProvider.js';
+import { DefaultQuestionProvider } from '../questions/DefaultQuestionProvider.js';
 
 type AppSocket = Socket<ClientToServerEvents, ServerToClientEvents, InterServerEvents, SocketData>;
 type AppServer = Server<ClientToServerEvents, ServerToClientEvents, InterServerEvents, SocketData>;
 
 export class RoomManager {
+  private questionProvider: QuestionProvider;
+
   constructor(
     private io: AppServer,
-    private store: RoomStore
-  ) {}
+    private store: RoomStore,
+    questionProvider?: QuestionProvider
+  ) {
+    this.questionProvider = questionProvider || new DefaultQuestionProvider();
+  }
 
   /** Create a new room. Returns { ok, data: { roomCode, sessionToken, playerId } } */
   handleCreate(socket: AppSocket, data: { name: string }): AckResponse {
-    // 1. Validate name
     const nameResult = validateName(data?.name);
     if (!nameResult.valid) return { ok: false, error: nameResult.error, code: 'INVALID_NAME' };
 
-    // 2. Generate room code
     const code = generateRoomCode(this.store);
-
-    // 3. Create room
     const room = this.store.createRoom(code);
 
-    // 4. Create player (host)
     const playerId = crypto.randomUUID();
     const sessionToken = crypto.randomBytes(16).toString('hex');
     const player: PlayerState = {
@@ -46,42 +49,34 @@ export class RoomManager {
     };
     room.players.set(playerId, player);
 
-    // 5. Associate socket with room
     socket.data.playerId = playerId;
     socket.data.roomCode = code;
     socket.data.sessionToken = sessionToken;
     socket.join(code);
 
-    // 6. Broadcast state
     this.broadcastState(room);
-
     return { ok: true, data: { roomCode: code, sessionToken, playerId } };
   }
 
   /** Join an existing room */
   handleJoin(socket: AppSocket, data: { code: string; name: string }): AckResponse {
-    // 1. Validate inputs
     const nameResult = validateName(data?.name);
     if (!nameResult.valid) return { ok: false, error: nameResult.error, code: 'INVALID_NAME' };
 
     const codeResult = validateRoomCode(data?.code);
     if (!codeResult.valid) return { ok: false, error: codeResult.error, code: 'INVALID_CODE' };
 
-    // 2. Find room
     const room = this.store.getRoom(codeResult.sanitized);
     if (!room) return { ok: false, error: 'Room not found', code: 'ROOM_NOT_FOUND' };
 
-    // 3. Check if game already started
     if (room.phase !== 'WAITING' && room.phase !== 'FINISHED') {
       return { ok: false, error: 'Game already in progress', code: 'GAME_IN_PROGRESS' };
     }
 
-    // 4. Check room capacity
     if (room.players.size >= GAME_CONSTANTS.MAX_PLAYERS) {
       return { ok: false, error: 'Room is full (max 8 players)', code: 'ROOM_FULL' };
     }
 
-    // 5. Check duplicate name (case-insensitive)
     const lowerName = nameResult.sanitized.toLowerCase();
     for (const p of room.players.values()) {
       if (p.name.toLowerCase() === lowerName) {
@@ -89,7 +84,6 @@ export class RoomManager {
       }
     }
 
-    // 6. Create player
     const playerId = crypto.randomUUID();
     const sessionToken = crypto.randomBytes(16).toString('hex');
     const player: PlayerState = {
@@ -108,15 +102,12 @@ export class RoomManager {
     room.players.set(playerId, player);
     room.lastActivityAt = Date.now();
 
-    // 7. Associate socket
     socket.data.playerId = playerId;
     socket.data.roomCode = codeResult.sanitized;
     socket.data.sessionToken = sessionToken;
     socket.join(codeResult.sanitized);
 
-    // 8. Broadcast state
     this.broadcastState(room);
-
     return { ok: true, data: { roomCode: codeResult.sanitized, sessionToken, playerId } };
   }
 
@@ -132,7 +123,6 @@ export class RoomManager {
     const room = this.store.getRoom(codeResult.sanitized);
     if (!room) return { ok: false, error: 'Room not found or has ended', code: 'ROOM_NOT_FOUND' };
 
-    // Find player by session token
     let player: PlayerState | undefined;
     for (const p of room.players.values()) {
       if (p.sessionToken === data.sessionToken) {
@@ -145,7 +135,6 @@ export class RoomManager {
       return { ok: false, error: 'Session not found in this room', code: 'SESSION_NOT_FOUND' };
     }
 
-    // Reconnect
     player.socketId = socket.id;
     player.connected = true;
     delete player.disconnectedAt;
@@ -169,10 +158,234 @@ export class RoomManager {
     }
 
     const room = this.store.getRoom(roomCode);
-    if (!room) return { ok: true }; // Room already gone
+    if (!room) return { ok: true };
 
     this.removePlayer(room, playerId, socket);
     return { ok: true };
+  }
+
+  /** Handle starting the game */
+  handleStartGame(socket: AppSocket): AckResponse {
+    const { roomCode, playerId } = socket.data;
+    if (!roomCode || !playerId) {
+      return { ok: false, error: 'Not in a room', code: 'NOT_IN_ROOM' };
+    }
+
+    const room = this.store.getRoom(roomCode);
+    if (!room) return { ok: false, error: 'Room not found', code: 'ROOM_NOT_FOUND' };
+
+    const player = room.players.get(playerId);
+    if (!player || !player.isHost) {
+      return { ok: false, error: 'Only the host can start the game', code: 'NOT_HOST' };
+    }
+
+    if (room.phase !== 'WAITING' && room.phase !== 'FINISHED') {
+      return { ok: false, error: 'Game cannot be started in current phase', code: 'INVALID_PHASE' };
+    }
+
+    const connectedCount = this.getConnectedCount(room);
+    if (connectedCount < GAME_CONSTANTS.MIN_PLAYERS) {
+      return { ok: false, error: `At least ${GAME_CONSTANTS.MIN_PLAYERS} players are required to start`, code: 'NOT_ENOUGH_PLAYERS' };
+    }
+
+    // Reset scores & stats for a fresh game
+    for (const p of room.players.values()) {
+      p.score = 0;
+      p.totalCorrect = 0;
+      p.totalAnswerTimeMs = 0;
+      p.answers.clear();
+    }
+
+    // Draw 10 questions avoiding previously used IDs
+    const questions = this.questionProvider.getGameSet(GAME_CONSTANTS.QUESTIONS_PER_GAME, room.usedQuestionIds);
+    for (const q of questions) {
+      room.usedQuestionIds.add(q.id);
+    }
+    room.questions = questions;
+    room.questionIndex = 0;
+
+    this.startCountdown(room);
+    return { ok: true };
+  }
+
+  /** Rematch in the same room */
+  handleRematch(socket: AppSocket): AckResponse {
+    const { roomCode, playerId } = socket.data;
+    if (!roomCode || !playerId) {
+      return { ok: false, error: 'Not in a room', code: 'NOT_IN_ROOM' };
+    }
+
+    const room = this.store.getRoom(roomCode);
+    if (!room) return { ok: false, error: 'Room not found', code: 'ROOM_NOT_FOUND' };
+
+    const player = room.players.get(playerId);
+    if (!player || !player.isHost) {
+      return { ok: false, error: 'Only the host can initiate rematch', code: 'NOT_HOST' };
+    }
+
+    if (room.phase !== 'FINISHED') {
+      return { ok: false, error: 'Game has not finished yet', code: 'INVALID_PHASE' };
+    }
+
+    return this.handleStartGame(socket);
+  }
+
+  /** Submit answer */
+  handleSubmitAnswer(socket: AppSocket, data: { questionId: string; optionIndex: number }): AckResponse {
+    const { roomCode, playerId } = socket.data;
+    if (!roomCode || !playerId) {
+      return { ok: false, error: 'Not in a room', code: 'NOT_IN_ROOM' };
+    }
+
+    const room = this.store.getRoom(roomCode);
+    if (!room) return { ok: false, error: 'Room not found', code: 'ROOM_NOT_FOUND' };
+
+    if (room.phase !== 'QUESTION_ACTIVE') {
+      return { ok: false, error: 'Questions are not currently active', code: 'INVALID_PHASE' };
+    }
+
+    const player = room.players.get(playerId);
+    if (!player) return { ok: false, error: 'Player not found', code: 'PLAYER_NOT_FOUND' };
+
+    const qValidation = validateQuestionId(data?.questionId);
+    if (!qValidation.valid) return { ok: false, error: qValidation.error, code: 'INVALID_QUESTION_ID' };
+
+    const optValidation = validateOptionIndex(data?.optionIndex);
+    if (!optValidation.valid) return { ok: false, error: optValidation.error, code: 'INVALID_OPTION' };
+
+    const currentQ = room.questions[room.questionIndex];
+    if (!currentQ || currentQ.id !== qValidation.value) {
+      return { ok: false, error: 'Question does not match current question', code: 'QUESTION_MISMATCH' };
+    }
+
+    if (player.answers.has(currentQ.id)) {
+      return { ok: false, error: 'You have already answered this question', code: 'ALREADY_ANSWERED' };
+    }
+
+    const now = Date.now();
+    if (now > room.phaseEndsAt + GAME_CONSTANTS.ANSWER_GRACE_MS) {
+      return { ok: false, error: 'Time limit expired', code: 'TIME_EXPIRED' };
+    }
+
+    const elapsedMs = Math.max(0, now - room.questionStartedAt);
+    const isCorrect = optValidation.value === currentQ.correctIndex;
+    const pointsGained = calculateScore(isCorrect, elapsedMs);
+
+    const answerState: AnswerState = {
+      questionId: currentQ.id,
+      optionIndex: optValidation.value,
+      receivedAt: now,
+      elapsedMs,
+      correct: isCorrect,
+      score: pointsGained,
+    };
+    player.answers.set(currentQ.id, answerState);
+    player.score += pointsGained;
+    if (isCorrect) {
+      player.totalCorrect += 1;
+    }
+    player.totalAnswerTimeMs += elapsedMs;
+
+    this.broadcastState(room);
+
+    // Early transition check: did every connected player answer?
+    this.checkAllAnswered(room);
+
+    return { ok: true };
+  }
+
+  private startCountdown(room: Room): void {
+    if (room.phaseTimer) clearTimeout(room.phaseTimer);
+
+    room.phase = 'STARTING';
+    room.phaseEndsAt = Date.now() + PHASE_DURATIONS_MS.STARTING;
+    this.broadcastState(room);
+
+    room.phaseTimer = setTimeout(() => {
+      this.startQuestion(room);
+    }, PHASE_DURATIONS_MS.STARTING);
+  }
+
+  private startQuestion(room: Room): void {
+    if (room.phaseTimer) clearTimeout(room.phaseTimer);
+
+    room.phase = 'QUESTION_ACTIVE';
+    room.questionStartedAt = Date.now();
+    room.phaseEndsAt = Date.now() + PHASE_DURATIONS_MS.QUESTION;
+    this.broadcastState(room);
+
+    room.phaseTimer = setTimeout(() => {
+      this.transitionToReveal(room);
+    }, PHASE_DURATIONS_MS.QUESTION);
+  }
+
+  private checkAllAnswered(room: Room): void {
+    if (room.phase !== 'QUESTION_ACTIVE') return;
+
+    const currentQ = room.questions[room.questionIndex];
+    if (!currentQ) return;
+
+    let allAnswered = true;
+    let connectedCount = 0;
+
+    for (const player of room.players.values()) {
+      if (player.connected) {
+        connectedCount++;
+        if (!player.answers.has(currentQ.id)) {
+          allAnswered = false;
+          break;
+        }
+      }
+    }
+
+    if (connectedCount > 0 && allAnswered) {
+      if (room.phaseTimer) clearTimeout(room.phaseTimer);
+      this.transitionToReveal(room);
+    }
+  }
+
+  private transitionToReveal(room: Room): void {
+    if (room.phaseTimer) clearTimeout(room.phaseTimer);
+
+    room.phase = 'REVEAL';
+    room.phaseEndsAt = Date.now() + PHASE_DURATIONS_MS.REVEAL;
+    this.broadcastState(room);
+
+    room.phaseTimer = setTimeout(() => {
+      this.transitionToScoreboard(room);
+    }, PHASE_DURATIONS_MS.REVEAL);
+  }
+
+  private transitionToScoreboard(room: Room): void {
+    if (room.phaseTimer) clearTimeout(room.phaseTimer);
+
+    room.phase = 'SCOREBOARD';
+    room.phaseEndsAt = Date.now() + PHASE_DURATIONS_MS.SCOREBOARD;
+    this.broadcastState(room);
+
+    room.phaseTimer = setTimeout(() => {
+      if (room.questionIndex + 1 < room.questions.length) {
+        room.questionIndex++;
+        this.startQuestion(room);
+      } else {
+        this.transitionToFinished(room);
+      }
+    }, PHASE_DURATIONS_MS.SCOREBOARD);
+  }
+
+  private transitionToFinished(room: Room): void {
+    if (room.phaseTimer) clearTimeout(room.phaseTimer);
+
+    room.phase = 'FINISHED';
+    room.phaseEndsAt = 0;
+    this.broadcastState(room);
+
+    setTimeout(() => {
+      const current = this.store.getRoom(room.code);
+      if (current && current.phase === 'FINISHED') {
+        this.store.deleteRoom(room.code);
+      }
+    }, GAME_CONSTANTS.FINISHED_ROOM_CLEANUP_MS);
   }
 
   /** Handle socket disconnect */
@@ -187,25 +400,23 @@ export class RoomManager {
     if (!player) return;
 
     if (room.phase === 'WAITING' || room.phase === 'FINISHED') {
-      // In lobby/finished: mark disconnected with grace period, then remove
       player.connected = false;
       player.disconnectedAt = Date.now();
       player.socketId = null;
 
       setTimeout(() => {
-        // Check if still disconnected after grace period
         if (!player.connected && room.players.has(playerId)) {
           this.removePlayer(room, playerId, socket);
         }
       }, GAME_CONSTANTS.LOBBY_DISCONNECT_GRACE_MS);
     } else {
-      // In-game: mark disconnected, retain score
       player.connected = false;
       player.disconnectedAt = Date.now();
       player.socketId = null;
+      // In-game: if remaining players have all answered, transition early
+      this.checkAllAnswered(room);
     }
 
-    // Handle host disconnect
     if (player.isHost) {
       setTimeout(() => {
         if (!player.connected && room.players.has(playerId)) {
@@ -225,12 +436,10 @@ export class RoomManager {
     room.players.delete(playerId);
     socket.leave(room.code);
 
-    // Transfer host if needed
     if (wasHost && room.players.size > 0) {
       this.transferHost(room, playerId);
     }
 
-    // Clean up empty room
     if (room.players.size === 0) {
       this.scheduleCleanup(room);
     } else {
@@ -240,7 +449,6 @@ export class RoomManager {
 
   /** Transfer host to the earliest-joined connected player */
   private transferHost(room: Room, excludeId: string): void {
-    // Find earliest-joined connected player
     let newHost: PlayerState | undefined;
     for (const p of room.players.values()) {
       if (p.id !== excludeId && p.connected) {
@@ -251,13 +459,11 @@ export class RoomManager {
     }
 
     if (newHost) {
-      // Remove host from previous player
       for (const p of room.players.values()) {
         p.isHost = false;
       }
       newHost.isHost = true;
 
-      // Notify
       this.io.to(room.code).emit('toast', {
         code: 'HOST_CHANGED',
         message: `${newHost.name} is now the host`,
@@ -293,7 +499,6 @@ export class RoomManager {
         hasAnswered: false,
       };
 
-      // Show current answer details only during REVEAL, SCOREBOARD, or FINISHED
       if (room.phase === 'REVEAL' || room.phase === 'SCOREBOARD' || room.phase === 'FINISHED') {
         const currentQ = room.questions[room.questionIndex];
         if (currentQ) {
@@ -308,7 +513,6 @@ export class RoomManager {
           }
         }
       } else if (room.phase === 'QUESTION_ACTIVE') {
-        // During question, only show whether they've answered (not what)
         const currentQ = room.questions[room.questionIndex];
         if (currentQ) {
           pub.hasAnswered = p.answers.has(currentQ.id);
@@ -329,7 +533,6 @@ export class RoomManager {
       selfId,
     };
 
-    // Add question (without correctIndex) during QUESTION_ACTIVE
     if (room.phase === 'QUESTION_ACTIVE' || room.phase === 'REVEAL' || room.phase === 'SCOREBOARD') {
       const q = room.questions[room.questionIndex];
       if (q) {
@@ -347,7 +550,6 @@ export class RoomManager {
       snapshot.endsAt = room.phaseEndsAt;
     }
 
-    // Add correct index only during REVEAL, SCOREBOARD, or FINISHED
     if (room.phase === 'REVEAL' || room.phase === 'SCOREBOARD' || room.phase === 'FINISHED') {
       const q = room.questions[room.questionIndex];
       if (q) {
