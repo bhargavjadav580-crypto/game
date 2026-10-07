@@ -53,17 +53,25 @@ app.get('/healthz', (_req, res) => {
   res.status(200).json({ status: 'ok', uptime: process.uptime(), rooms: store.roomCount() });
 });
 
-// In production, serve the built client
-if (NODE_ENV === 'production') {
-  const candidates = [
-    path.join(__dirname, '../../client/dist'),
-    path.join(__dirname, '../client/dist'),
-    path.join(process.cwd(), 'client/dist'),
-  ];
-  const clientDist = candidates.find(dir => fs.existsSync(dir)) || path.join(__dirname, '../../client/dist');
+// Serve the built client if available
+const candidates = [
+  path.join(process.cwd(), 'client/dist'),
+  path.join(__dirname, '../../client/dist'),
+  path.join(__dirname, '../client/dist'),
+  path.resolve('client/dist'),
+];
+const clientDist = candidates.find(dir => fs.existsSync(path.join(dir, 'index.html'))) || candidates[0];
+
+if (fs.existsSync(path.join(clientDist, 'index.html'))) {
+  console.log(`[Qlyvora] Serving static client from: ${clientDist}`);
   app.use(express.static(clientDist));
   app.get('*', (_req, res) => {
     res.sendFile(path.join(clientDist, 'index.html'));
+  });
+} else {
+  console.warn('[Qlyvora] Warning: No built client index.html found in candidates:', candidates);
+  app.get('/', (_req, res) => {
+    res.status(200).send('<h1>Qlyvora server is running</h1><p>Client build is loading...</p>');
   });
 }
 
