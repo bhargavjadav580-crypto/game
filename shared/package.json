@@ -4,9 +4,9 @@
   "type": "module",
   "main": "src/index.ts",
   "scripts": {
-    "build": "tsc -p ."
+    "build": "tsc -p . && node -e \"const fs=require('fs'); fs.readdirSync('dist').filter(f=>f.endsWith('.js')).forEach(f=>fs.copyFileSync('dist/'+f, 'src/'+f))\""
   },
-  "devDependencies": {
+  "dependencies": {
     "typescript": "^5.5.0"
   }
 }

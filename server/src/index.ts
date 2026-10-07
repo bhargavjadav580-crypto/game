@@ -148,7 +148,7 @@ io.on('connection', (socket) => {
 });
 
 if (NODE_ENV !== 'test') {
-  httpServer.listen(PORT, () => {
+  httpServer.listen(PORT, '0.0.0.0', () => {
     console.log(`[Qlyvora] Server running on port ${PORT} (${NODE_ENV})`);
   });
 }
