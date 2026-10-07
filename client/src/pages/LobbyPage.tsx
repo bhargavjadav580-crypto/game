@@ -7,7 +7,7 @@ import './LobbyPage.css';
 export default function LobbyPage() {
   const { code } = useParams<{ code: string }>();
   const navigate = useNavigate();
-  const { snapshot, connected, startGame, leaveRoom, toast } = useSocket();
+  const { snapshot, connected, startGame, leaveRoom, rejoinRoom, toast } = useSocket();
   const [copied, setCopied] = useState(false);
 
   // If no snapshot and we have stored session, try rejoin
