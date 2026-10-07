@@ -18,10 +18,8 @@
     "erasableSyntaxOnly": true,
     "noFallthroughCasesInSwitch": true,
     "paths": {
-      "@shared/*": ["../shared/src/*"]
-    },
-    "baseUrl": ".",
-    "ignoreDeprecations": "6.0"
+      "@shared/*": ["./src/../../shared/src/*"]
+    }
   },
   "include": ["src", "../shared/src"]
 }
