@@ -116,12 +116,14 @@ describe('Layer 1: Pure Functions & Core Logic', () => {
 
     it('provider produces 10 questions with shuffled options without losing correct answer', () => {
       const provider = new DefaultQuestionProvider();
+      const allQuestions = provider.getAll();
       const gameSet = provider.getGameSet(10);
       expect(gameSet.length).toBe(10);
 
       for (const q of gameSet) {
         expect(q.options.length).toBe(4);
-        const original = GENERAL_KNOWLEDGE_QUESTIONS.find((item) => item.id === q.id)!;
+        const original = allQuestions.find((item) => item.id === q.id)!;
+        expect(original).toBeDefined();
         const expectedCorrectText = original.options[original.correctIndex];
         expect(q.options[q.correctIndex]).toBe(expectedCorrectText);
       }

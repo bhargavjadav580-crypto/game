@@ -1,28 +1,104 @@
+import fs from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import type { ServerQuestion, Difficulty } from '../../../shared/src/types.js';
 import type { QuestionProvider } from './QuestionProvider.js';
 import { GENERAL_KNOWLEDGE_QUESTIONS } from './general-knowledge.js';
 import { GAME_CONSTANTS } from '../../../shared/src/config.js';
 
-export class DefaultQuestionProvider implements QuestionProvider {
-  private questions: ServerQuestion[];
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
-  constructor(questions?: ServerQuestion[]) {
-    this.questions = questions || GENERAL_KNOWLEDGE_QUESTIONS;
+export class DefaultQuestionProvider implements QuestionProvider {
+  private questions: ServerQuestion[] = [];
+  private categories: string[] = [];
+
+  constructor(customQuestions?: ServerQuestion[]) {
+    if (customQuestions && customQuestions.length > 0) {
+      this.questions = customQuestions;
+      return;
+    }
+
+    // Load initial General Knowledge questions
+    this.questions.push(...GENERAL_KNOWLEDGE_QUESTIONS);
+
+    // Dynamically load all JSON category banks from data directory
+    try {
+      const dataDir = path.join(__dirname, 'data');
+      if (fs.existsSync(dataDir)) {
+        const files = fs.readdirSync(dataDir).filter(f => f.endsWith('.json'));
+        for (const file of files) {
+          const content = fs.readFileSync(path.join(dataDir, file), 'utf-8');
+          const parsed: ServerQuestion[] = JSON.parse(content);
+          this.questions.push(...parsed);
+        }
+      }
+    } catch (err) {
+      console.warn('[QuestionProvider] Warning: Failed to load external category banks, using built-in questions:', err);
+    }
+
+    this.categories = Array.from(new Set(this.questions.map(q => q.category)));
   }
 
   getAll(): ServerQuestion[] {
     return [...this.questions];
   }
 
+  getCategories(): string[] {
+    return this.categories;
+  }
+
   getByDifficulty(difficulty: Difficulty): ServerQuestion[] {
     return this.questions.filter(q => q.difficulty === difficulty);
   }
 
+  getByCategory(category: string): ServerQuestion[] {
+    return this.questions.filter(q => q.category.toLowerCase() === category.toLowerCase());
+  }
+
   /**
-   * Select a balanced mix of questions for a game.
-   * Default mix: 4 easy, 4 medium, 2 hard.
+   * Optionally fetch questions dynamically from OpenTDB
+   */
+  async fetchLiveOpenTdb(amount = 10): Promise<ServerQuestion[] | null> {
+    try {
+      const res = await fetch(`https://opentdb.com/api.php?amount=${amount}&type=multiple`);
+      if (!res.ok) return null;
+      const data: any = await res.json();
+      if (!data.results || data.results.length === 0) return null;
+
+      const converted: ServerQuestion[] = data.results.map((item: any, idx: number) => {
+        const unescape = (str: string) =>
+          str.replace(/&quot;/g, '"')
+             .replace(/&#039;/g, "'")
+             .replace(/&amp;/g, '&')
+             .replace(/&lt;/g, '<')
+             .replace(/&gt;/g, '>');
+
+        const correct = unescape(item.correct_answer);
+        const incorrect = item.incorrect_answers.map((a: string) => unescape(a));
+        const allOptions = [correct, ...incorrect];
+
+        return {
+          id: `live-${Date.now()}-${idx}`,
+          category: unescape(item.category),
+          text: unescape(item.question),
+          options: allOptions,
+          correctIndex: 0,
+          difficulty: item.difficulty as Difficulty,
+        };
+      });
+
+      return converted.map(q => this.shuffleOptions(q));
+    } catch {
+      return null;
+    }
+  }
+
+  /**
+   * Select a balanced, diverse mix of questions for a game.
+   * Pulls across multiple categories (Sports, Space, History, Nature, Animals, Logic, etc.)
    * Excludes previously used question IDs.
-   * Shuffles option order server-side (same shuffle for all players in a game).
+   * Shuffles option order server-side.
    */
   getGameSet(count: number = GAME_CONSTANTS.QUESTIONS_PER_GAME, excludeIds?: Set<string>): ServerQuestion[] {
     const available = this.questions.filter(q => !excludeIds?.has(q.id));
@@ -31,14 +107,13 @@ export class DefaultQuestionProvider implements QuestionProvider {
     const medium = this.shuffleArray(available.filter(q => q.difficulty === 'medium'));
     const hard = this.shuffleArray(available.filter(q => q.difficulty === 'hard'));
 
-    // Target mix: 4 easy, 4 medium, 2 hard
+    // Target balance: ~4 easy, ~4 medium, ~2 hard
     const selected: ServerQuestion[] = [
       ...easy.slice(0, 4),
       ...medium.slice(0, 4),
       ...hard.slice(0, 2),
     ];
 
-    // If we don't have enough of a difficulty, fill from others
     if (selected.length < count) {
       const selectedIds = new Set(selected.map(q => q.id));
       const remaining = available.filter(q => !selectedIds.has(q.id));
@@ -46,11 +121,9 @@ export class DefaultQuestionProvider implements QuestionProvider {
       selected.push(...shuffledRemaining.slice(0, count - selected.length));
     }
 
-    // Shuffle the overall order and shuffle options within each question
     return this.shuffleArray(selected.slice(0, count)).map(q => this.shuffleOptions(q));
   }
 
-  /** Fisher-Yates shuffle */
   private shuffleArray<T>(arr: T[]): T[] {
     const shuffled = [...arr];
     for (let i = shuffled.length - 1; i > 0; i--) {
@@ -60,7 +133,6 @@ export class DefaultQuestionProvider implements QuestionProvider {
     return shuffled;
   }
 
-  /** Shuffle option order and update correctIndex accordingly */
   private shuffleOptions(question: ServerQuestion): ServerQuestion {
     const correctOption = question.options[question.correctIndex];
     const shuffledOptions = this.shuffleArray([...question.options]);
