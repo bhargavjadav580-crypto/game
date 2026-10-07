@@ -20,7 +20,8 @@
     "paths": {
       "@shared/*": ["../shared/src/*"]
     },
-    "baseUrl": "."
+    "baseUrl": ".",
+    "ignoreDeprecations": "6.0"
   },
   "include": ["src", "../shared/src"]
 }

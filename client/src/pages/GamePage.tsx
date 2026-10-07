@@ -14,11 +14,9 @@ export default function GamePage() {
     snapshot,
     connected,
     submitAnswer,
-    startGame,
     requestRematch,
     leaveRoom,
     rejoinRoom,
-    toast,
   } = useSocket();
 
   const [selectedOption, setSelectedOption] = useState<number | null>(null);

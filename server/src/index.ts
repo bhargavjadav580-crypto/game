@@ -40,7 +40,7 @@ app.get('/healthz', (_req, res) => {
 // Socket.IO setup
 const io = new Server<ClientToServerEvents, ServerToClientEvents, InterServerEvents, SocketData>(httpServer, {
   cors: {
-    origin: NODE_ENV === 'production' ? ORIGIN : '*',
+    origin: '*',
     methods: ['GET', 'POST'],
   },
   maxHttpBufferSize: 1e4,
