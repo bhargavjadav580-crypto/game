@@ -141,8 +141,10 @@ io.on('connection', (socket) => {
   });
 });
 
-httpServer.listen(PORT, () => {
-  console.log(`[Qlyvora] Server running on port ${PORT} (${NODE_ENV})`);
-});
+if (NODE_ENV !== 'test') {
+  httpServer.listen(PORT, () => {
+    console.log(`[Qlyvora] Server running on port ${PORT} (${NODE_ENV})`);
+  });
+}
 
 export { io, app, httpServer, roomManager, store };

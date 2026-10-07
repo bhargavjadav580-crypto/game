@@ -1,32 +1,66 @@
-/* Qlyvora — Global Theme & Reset */
-@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap');
+/* Qlyvora — Playful Party Game Theme & Tokens */
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&family=Space+Grotesk:wght@600;700;800&display=swap');
 
 :root {
-  /* Colors */
-  --bg: #0B0D1A;
-  --surface: #151A33;
-  --surface-raised: #1E2547;
-  --primary: #4C6FFF;
-  --primary-hover: #3A5BE0;
-  --secondary: #7B5CFF;
-  --accent: #FFD23F;
-  --accent-hover: #E6BC38;
-  --success: #2ECC9A;
-  --danger: #FF5C7A;
-  --text: #F0F0F5;
-  --text-muted: #8B90A8;
-  --text-dim: #5A5F7A;
-  --border: #2A3060;
+  /* Dynamic Background Colors */
+  --bg-gradient-start: #2B0F6B;
+  --bg-gradient-mid: #4A1FA8;
+  --bg-gradient-end: #1B0B4D;
+
+  /* Card & Glass Surfaces */
+  --surface: rgba(255, 255, 255, 0.08);
+  --surface-raised: rgba(255, 255, 255, 0.14);
+  --surface-glass-border: rgba(255, 255, 255, 0.18);
+  --surface-blur: 16px;
+
+  /* Playful Quiz Palette (Kahoot / Quizizz / Duolingo Inspired) */
+  --opt-a: #E21B3C;
+  --opt-a-light: #F03A58;
+  --opt-a-dark: #A50E28;
+
+  --opt-b: #1368CE;
+  --opt-b-light: #2C7FEB;
+  --opt-b-dark: #0B4A96;
+
+  --opt-c: #FFA602;
+  --opt-c-light: #FFBA2E;
+  --opt-c-dark: #C67E00;
+
+  --opt-d: #26890C;
+  --opt-d-light: #38A918;
+  --opt-d-dark: #196106;
+
+  /* Party Accent Palette */
+  --accent-pink: #FF4D8D;
+  --accent-cyan: #22D3EE;
+  --accent-lime: #B8F400;
+  --accent-gold: #FFD23F;
+  --accent-gold-shade: #D4A817;
+
+  /* State Colors with Soft Glows */
+  --success: #2ECC71;
+  --success-dark: #229954;
+  --success-glow: rgba(46, 204, 113, 0.4);
+
+  --danger: #FF4757;
+  --danger-dark: #D63031;
+  --danger-glow: rgba(255, 71, 87, 0.4);
 
   /* Typography */
-  --font-family: 'Space Grotesk', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --text: #FFFFFF;
+  --text-muted: #E2D9F3;
+  --text-dim: #A89AC7;
+  --font-family: 'Plus Jakarta Sans', 'Space Grotesk', system-ui, -apple-system, sans-serif;
+  --font-display: 'Space Grotesk', 'Plus Jakarta Sans', system-ui, sans-serif;
+
+  /* Fluid Type Scales */
   --font-size-xs: clamp(0.75rem, 0.7rem + 0.25vw, 0.8125rem);
   --font-size-sm: clamp(0.8125rem, 0.75rem + 0.3vw, 0.9375rem);
-  --font-size-base: clamp(1rem, 0.9rem + 0.5vw, 1.125rem);
-  --font-size-lg: clamp(1.125rem, 1rem + 0.6vw, 1.375rem);
-  --font-size-xl: clamp(1.5rem, 1.2rem + 1.5vw, 2rem);
-  --font-size-2xl: clamp(2rem, 1.5rem + 2.5vw, 3rem);
-  --font-size-3xl: clamp(2.5rem, 2rem + 3vw, 4rem);
+  --font-size-base: clamp(1rem, 0.95rem + 0.3vw, 1.125rem);
+  --font-size-lg: clamp(1.125rem, 1rem + 0.5vw, 1.35rem);
+  --font-size-xl: clamp(1.5rem, 1.25rem + 1vw, 2rem);
+  --font-size-2xl: clamp(2rem, 1.6rem + 2vw, 2.75rem);
+  --font-size-3xl: clamp(2.5rem, 2rem + 3vw, 3.75rem);
 
   /* Spacing */
   --space-xs: 0.25rem;
@@ -37,44 +71,41 @@
   --space-2xl: 3rem;
   --space-3xl: 4rem;
 
-  /* Borders */
-  --radius-sm: 0.375rem;
-  --radius-md: 0.75rem;
-  --radius-lg: 1rem;
-  --radius-xl: 1.5rem;
+  /* Card Radii */
+  --radius-sm: 0.5rem;
+  --radius-md: 1rem;
+  --radius-lg: 1.25rem;
+  --radius-xl: 1.75rem;
   --radius-full: 9999px;
 
-  /* Shadows */
-  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.3);
-  --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.4);
-  --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.5);
-  --shadow-glow-primary: 0 0 20px rgba(76, 111, 255, 0.3);
-  --shadow-glow-accent: 0 0 20px rgba(255, 210, 63, 0.3);
+  /* 3D Depths & Glows */
+  --shadow-sm: 0 4px 12px rgba(0, 0, 0, 0.25);
+  --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.3);
+  --shadow-lg: 0 16px 40px rgba(0, 0, 0, 0.4);
+  --shadow-glow-gold: 0 0 30px rgba(255, 210, 63, 0.4);
+  --shadow-glow-purple: 0 0 40px rgba(123, 92, 255, 0.35);
 
   /* Transitions */
-  --transition-fast: 150ms ease;
-  --transition-normal: 250ms ease;
-  --transition-slow: 400ms ease;
+  --ease-bounce: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --ease-smooth: cubic-bezier(0.25, 1, 0.5, 1);
+  --transition-fast: 150ms var(--ease-smooth);
+  --transition-bounce: 250ms var(--ease-bounce);
 
   /* Safe areas */
   --safe-top: env(safe-area-inset-top, 0px);
   --safe-bottom: env(safe-area-inset-bottom, 0px);
-  --safe-left: env(safe-area-inset-left, 0px);
-  --safe-right: env(safe-area-inset-right, 0px);
 }
 
 @media (prefers-reduced-motion: reduce) {
-  :root {
-    --transition-fast: 0ms;
-    --transition-normal: 0ms;
-    --transition-slow: 0ms;
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
   }
 }
 
-/* Reset */
-*,
-*::before,
-*::after {
+/* Reset & Box Model */
+*, *::before, *::after {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
@@ -85,28 +116,73 @@ html {
   -webkit-text-size-adjust: 100%;
   text-size-adjust: 100%;
   -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
 }
 
 body {
   font-family: var(--font-family);
   font-size: var(--font-size-base);
   color: var(--text);
-  background: var(--bg);
-  line-height: 1.5;
+  line-height: 1.45;
   min-height: 100dvh;
   overflow-x: hidden;
   touch-action: manipulation;
+  background: linear-gradient(135deg, var(--bg-gradient-start) 0%, var(--bg-gradient-mid) 50%, var(--bg-gradient-end) 100%);
+  background-attachment: fixed;
+  position: relative;
+}
+
+/* Floating animated color ambient orbs */
+body::before,
+body::after {
+  content: '';
+  position: fixed;
+  border-radius: 50%;
+  filter: blur(80px);
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0.4;
+}
+
+body::before {
+  width: 320px;
+  height: 320px;
+  background: var(--accent-pink);
+  top: -60px;
+  left: -80px;
+  animation: floatOrbA 18s ease-in-out infinite alternate;
+}
+
+body::after {
+  width: 360px;
+  height: 360px;
+  background: var(--accent-cyan);
+  bottom: -60px;
+  right: -80px;
+  animation: floatOrbB 22s ease-in-out infinite alternate;
+}
+
+@keyframes floatOrbA {
+  0% { transform: translate(0, 0) scale(1); }
+  50% { transform: translate(60px, 80px) scale(1.15); }
+  100% { transform: translate(-30px, 120px) scale(0.9); }
+}
+
+@keyframes floatOrbB {
+  0% { transform: translate(0, 0) scale(1); }
+  50% { transform: translate(-80px, -60px) scale(1.1); }
+  100% { transform: translate(40px, -100px) scale(0.95); }
 }
 
 #root {
   min-height: 100dvh;
   display: flex;
   flex-direction: column;
+  position: relative;
+  z-index: 1;
 }
 
 a {
-  color: var(--primary);
+  color: var(--accent-cyan);
   text-decoration: none;
 }
 
@@ -122,55 +198,44 @@ button {
 
 input {
   font-family: inherit;
-  font-size: max(16px, var(--font-size-base)); /* Prevent iOS zoom */
+  font-size: max(16px, var(--font-size-base));
   color: var(--text);
-  background: var(--surface);
-  border: 1px solid var(--border);
+  background: rgba(255, 255, 255, 0.1);
+  border: 2px solid var(--surface-glass-border);
   border-radius: var(--radius-md);
-  padding: var(--space-md);
+  padding: 1rem 1.25rem;
   outline: none;
   width: 100%;
-  transition: border-color var(--transition-fast);
+  backdrop-filter: blur(8px);
+  transition: all var(--transition-fast);
 }
 
 input:focus {
-  border-color: var(--primary);
-  box-shadow: var(--shadow-glow-primary);
+  border-color: var(--accent-gold);
+  background: rgba(255, 255, 255, 0.16);
+  box-shadow: 0 0 20px rgba(255, 210, 63, 0.35);
 }
 
 input::placeholder {
   color: var(--text-dim);
 }
 
-/* Focus visible */
 :focus-visible {
-  outline: 2px solid var(--primary);
-  outline-offset: 2px;
+  outline: 3px solid var(--accent-gold);
+  outline-offset: 3px;
 }
 
-/* Scrollbar styling */
+/* Custom modern scrollbar */
 ::-webkit-scrollbar {
-  width: 6px;
+  width: 8px;
 }
-
 ::-webkit-scrollbar-track {
-  background: var(--bg);
+  background: rgba(0, 0, 0, 0.2);
 }
-
 ::-webkit-scrollbar-thumb {
-  background: var(--border);
+  background: rgba(255, 255, 255, 0.2);
   border-radius: var(--radius-full);
 }
-
-/* Utility classes */
-.sr-only {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  padding: 0;
-  margin: -1px;
-  overflow: hidden;
-  clip: rect(0, 0, 0, 0);
-  white-space: nowrap;
-  border-width: 0;
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.35);
 }

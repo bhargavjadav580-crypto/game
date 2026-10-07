@@ -10,34 +10,61 @@
 
 .form-card {
   width: 100%;
-  max-width: 420px;
+  max-width: 440px;
   background: var(--surface);
+  border: 1px solid var(--surface-glass-border);
+  backdrop-filter: blur(var(--surface-blur));
+  -webkit-backdrop-filter: blur(var(--surface-blur));
   border-radius: var(--radius-xl);
   padding: var(--space-2xl);
-  box-shadow: var(--shadow-lg);
+  box-shadow: var(--shadow-lg), 0 0 30px rgba(123, 92, 255, 0.2);
+  animation: cardEntrance 0.6s var(--ease-bounce) both;
+}
+
+@keyframes cardEntrance {
+  0% {
+    opacity: 0;
+    transform: scale(0.9) translateY(24px);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
 }
 
 .back-btn {
   color: var(--text-muted);
   font-size: var(--font-size-sm);
+  font-weight: 700;
   margin-bottom: var(--space-lg);
-  padding: var(--space-xs) 0;
-  transition: color var(--transition-fast);
+  padding: 6px 12px;
+  border-radius: var(--radius-md);
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-xs);
+  transition: all var(--transition-fast);
 }
 
 .back-btn:hover {
-  color: var(--text);
+  color: #FFF;
+  background: rgba(255, 255, 255, 0.18);
+  transform: translateX(-3px);
 }
 
 .form-title {
-  font-size: var(--font-size-xl);
-  font-weight: 700;
+  font-family: var(--font-display);
+  font-size: var(--font-size-2xl);
+  font-weight: 800;
   margin-bottom: var(--space-xs);
+  letter-spacing: -0.02em;
 }
 
 .form-subtitle {
   color: var(--text-muted);
   font-size: var(--font-size-sm);
+  font-weight: 500;
   margin-bottom: var(--space-xl);
 }
 
@@ -55,15 +82,26 @@
 
 .form-label {
   font-size: var(--font-size-sm);
-  font-weight: 600;
+  font-weight: 700;
   color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
 }
 
 .form-error {
-  color: var(--danger);
+  color: #FFF;
+  font-weight: 600;
   font-size: var(--font-size-sm);
   padding: var(--space-sm) var(--space-md);
-  background: rgba(255, 92, 122, 0.1);
-  border-radius: var(--radius-sm);
-  border: 1px solid rgba(255, 92, 122, 0.3);
+  background: rgba(255, 71, 87, 0.35);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--danger);
+  box-shadow: 0 0 16px var(--danger-glow);
+  animation: shakeError 0.4s ease both;
+}
+
+@keyframes shakeError {
+  0%, 100% { transform: translateX(0); }
+  20%, 60% { transform: translateX(-6px); }
+  40%, 80% { transform: translateX(6px); }
 }
