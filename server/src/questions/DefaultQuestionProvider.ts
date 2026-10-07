@@ -24,8 +24,14 @@ export class DefaultQuestionProvider implements QuestionProvider {
 
     // Dynamically load all JSON category banks from data directory
     try {
-      const dataDir = path.join(__dirname, 'data');
-      if (fs.existsSync(dataDir)) {
+      const candidates = [
+        path.join(__dirname, 'data'),
+        path.join(__dirname, '../src/questions/data'),
+        path.join(process.cwd(), 'server/src/questions/data'),
+        path.join(process.cwd(), 'src/questions/data'),
+      ];
+      const dataDir = candidates.find(dir => fs.existsSync(dir));
+      if (dataDir) {
         const files = fs.readdirSync(dataDir).filter(f => f.endsWith('.json'));
         for (const file of files) {
           const content = fs.readFileSync(path.join(dataDir, file), 'utf-8');

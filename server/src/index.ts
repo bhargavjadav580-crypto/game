@@ -5,6 +5,7 @@ import helmet from 'helmet';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import type { ClientToServerEvents, ServerToClientEvents, InterServerEvents, SocketData } from '../../shared/src/protocol.js';
+import fs from 'node:fs';
 import { InMemoryRoomStore } from './rooms/InMemoryRoomStore.js';
 import { RoomManager } from './rooms/roomManager.js';
 
@@ -32,11 +33,6 @@ app.use(helmet({
   } : false,
 }));
 
-// Health check
-app.get('/healthz', (_req, res) => {
-  res.status(200).json({ status: 'ok', uptime: process.uptime(), rooms: store.roomCount() });
-});
-
 // Socket.IO setup
 const io = new Server<ClientToServerEvents, ServerToClientEvents, InterServerEvents, SocketData>(httpServer, {
   cors: {
@@ -48,18 +44,28 @@ const io = new Server<ClientToServerEvents, ServerToClientEvents, InterServerEve
   pingTimeout: 5000,
 });
 
+// Room management
+const store = new InMemoryRoomStore();
+const roomManager = new RoomManager(io, store);
+
+// Health check
+app.get('/healthz', (_req, res) => {
+  res.status(200).json({ status: 'ok', uptime: process.uptime(), rooms: store.roomCount() });
+});
+
 // In production, serve the built client
 if (NODE_ENV === 'production') {
-  const clientDist = path.join(__dirname, '../../client/dist');
+  const candidates = [
+    path.join(__dirname, '../../client/dist'),
+    path.join(__dirname, '../client/dist'),
+    path.join(process.cwd(), 'client/dist'),
+  ];
+  const clientDist = candidates.find(dir => fs.existsSync(dir)) || path.join(__dirname, '../../client/dist');
   app.use(express.static(clientDist));
   app.get('*', (_req, res) => {
     res.sendFile(path.join(clientDist, 'index.html'));
   });
 }
-
-// Room management
-const store = new InMemoryRoomStore();
-const roomManager = new RoomManager(io, store);
 
 // Socket connection handler
 io.on('connection', (socket) => {
