@@ -1,7 +1,7 @@
 // Phase durations in milliseconds (server-authoritative)
 export const PHASE_DURATIONS_MS = {
     STARTING: 3000,
-    QUESTION: 8000,
+    QUESTION: 13000,
     REVEAL: 3000,
     SCOREBOARD: 3000,
 };

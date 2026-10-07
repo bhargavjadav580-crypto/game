@@ -29,6 +29,14 @@ class SoundManager {
     return this.isMuted;
   }
 
+  public play(type: 'countdown' | 'question' | 'correct' | 'wrong' | 'gameover' | 'click' | string) {
+    if (type === 'countdown') this.playCountdownTick();
+    else if (type === 'correct') this.playCorrect();
+    else if (type === 'wrong') this.playWrong();
+    else if (type === 'click') this.playSelect();
+    else if (type === 'gameover') this.playWinner();
+  }
+
   // Countdown tick (short high blip)
   public playCountdownTick() {
     if (this.isMuted) return;

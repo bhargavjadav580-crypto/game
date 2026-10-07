@@ -8,7 +8,10 @@ export type GamePhase =
   | 'FINISHED';
 
 // Difficulty levels
-export type Difficulty = 'easy' | 'medium' | 'hard';
+export type Difficulty = 'easy' | 'medium' | 'hard' | 'all';
+
+// Supported languages
+export type QuizLanguage = 'en' | 'hi';
 
 // Player answer record
 export interface AnswerRecord {
@@ -53,6 +56,7 @@ export interface ServerQuestion {
   options: string[];
   correctIndex: number;
   difficulty: Difficulty;
+  language?: QuizLanguage;
 }
 
 // Room state snapshot sent to each client
@@ -71,6 +75,12 @@ export interface RoomSnapshot {
   correctIndex?: number;       // only sent during REVEAL/SCOREBOARD/FINISHED
   // Self identification
   selfId: string;
+  // Match configuration
+  category?: string;
+  difficulty?: Difficulty;
+  questionCount?: number;
+  questionTimeMs?: number;
+  language?: QuizLanguage;
 }
 
 // Toast message from server

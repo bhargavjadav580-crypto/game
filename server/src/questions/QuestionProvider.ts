@@ -1,4 +1,12 @@
-import type { ServerQuestion, Difficulty } from '../../../shared/src/types.js';
+import type { ServerQuestion, Difficulty, QuizLanguage } from '../../../shared/src/types.js';
+
+export interface GameSetOptions {
+  count?: number;
+  category?: string;
+  difficulty?: Difficulty;
+  language?: QuizLanguage;
+  excludeIds?: Set<string>;
+}
 
 /**
  * Interface for question providers.
@@ -9,6 +17,6 @@ export interface QuestionProvider {
   getAll(): ServerQuestion[];
   /** Get questions filtered by difficulty */
   getByDifficulty(difficulty: Difficulty): ServerQuestion[];
-  /** Get a mix of questions for a game (4 easy, 4 medium, 2 hard by default) */
-  getGameSet(count: number, excludeIds?: Set<string>): ServerQuestion[];
+  /** Get questions for a game based on count or rich filters */
+  getGameSet(optionsOrCount?: number | GameSetOptions, excludeIds?: Set<string>): ServerQuestion[];
 }

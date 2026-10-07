@@ -1,6 +1,15 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import socket from '../services/socket';
-import type { RoomSnapshot, AckResponse } from '@shared/types';
+import type { RoomSnapshot, AckResponse, Difficulty, QuizLanguage } from '@shared/types';
+
+export interface CreateRoomParams {
+  name: string;
+  category?: string;
+  difficulty?: Difficulty;
+  questionCount?: number;
+  questionTimeSec?: number;
+  language?: QuizLanguage;
+}
 
 export function useSocket() {
   const [connected, setConnected] = useState(socket.connected);
@@ -43,9 +52,10 @@ export function useSocket() {
     };
   }, []);
 
-  const createRoom = useCallback((name: string): Promise<AckResponse> => {
+  const createRoom = useCallback((params: string | CreateRoomParams): Promise<AckResponse> => {
+    const payload = typeof params === 'string' ? { name: params } : params;
     return new Promise((resolve) => {
-      socket.emit('room:create', { name }, (res) => resolve(res));
+      socket.emit('room:create', payload, (res) => resolve(res));
     });
   }, []);
 

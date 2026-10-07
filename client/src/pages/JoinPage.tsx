@@ -1,14 +1,17 @@
 import { useState, useEffect, type FormEvent } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useSocket } from '../hooks/useSocket';
+import { useTranslation } from '../i18n';
 import '../styles/buttons.css';
-import './CreatePage.css'; // reuse form styles
+import './CreatePage.css';
 
 export default function JoinPage() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { joinRoom } = useSocket();
-  const [name, setName] = useState('');
+  const { t } = useTranslation();
+
+  const [name, setName] = useState(() => localStorage.getItem('qlyvora_name') || '');
   const [code, setCode] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -23,6 +26,11 @@ export default function JoinPage() {
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
+    if (name.trim().length < 2) {
+      setError(t('error.nameRequired'));
+      return;
+    }
+
     setError('');
     setLoading(true);
 
@@ -36,49 +44,58 @@ export default function JoinPage() {
         localStorage.setItem('qlyvora_name', name.trim());
         navigate(`/lobby/${roomCode}`);
       } else {
-        setError(result.error || 'Failed to join game');
+        setError(result.error || t('error.roomNotFound'));
       }
     } catch {
-      setError('Connection error. Please try again.');
+      setError(t('error.connection'));
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <main className="page-center">
-      <div className="form-card">
-        <button className="back-btn" onClick={() => navigate('/')} aria-label="Go back">
-          ← Back
-        </button>
-        <h1 className="form-title">Join Game</h1>
-        <p className="form-subtitle">Enter the room code and your name</p>
+    <main className="page-center create-page-wrapper">
+      <div className="create-room-card" style={{ maxWidth: '480px' }}>
+        <div className="card-top-bar">
+          <button className="back-btn" onClick={() => navigate('/')} aria-label={t('btn.back')}>
+            {t('btn.back')}
+          </button>
+        </div>
 
-        <form onSubmit={handleSubmit} className="form">
+        <h1 className="form-title">{t('join.title')}</h1>
+        <p className="form-subtitle">{t('join.subtitle')}</p>
+
+        <form onSubmit={handleSubmit} className="create-form">
           <div className="form-field">
-            <label htmlFor="code" className="form-label">Room Code</label>
+            <label htmlFor="code" className="form-label">{t('join.roomCode')}</label>
             <input
               id="code"
               type="text"
               value={code}
               onChange={(e) => setCode(e.target.value.toUpperCase())}
-              placeholder="e.g. ABC23"
+              placeholder={t('join.roomCodePlaceholder')}
               maxLength={5}
               required
               autoFocus={!code}
               autoComplete="off"
-              style={{ textTransform: 'uppercase', letterSpacing: '0.15em', fontWeight: 700, textAlign: 'center', fontSize: 'var(--font-size-xl)' }}
+              style={{
+                textTransform: 'uppercase',
+                letterSpacing: '0.2em',
+                fontWeight: 700,
+                textAlign: 'center',
+                fontSize: '1.4rem'
+              }}
             />
           </div>
 
           <div className="form-field">
-            <label htmlFor="join-name" className="form-label">Your Name</label>
+            <label htmlFor="join-name" className="form-label">{t('label.name')}</label>
             <input
               id="join-name"
               type="text"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder="Enter your name"
+              placeholder={t('label.namePlaceholder')}
               minLength={2}
               maxLength={16}
               required
@@ -98,7 +115,7 @@ export default function JoinPage() {
             className="btn btn-primary btn-lg btn-block"
             disabled={loading || name.trim().length < 2 || code.trim().length !== 5}
           >
-            {loading ? 'Joining…' : 'Join Game'}
+            {loading ? t('btn.joining') : t('btn.join')}
           </button>
         </form>
       </div>

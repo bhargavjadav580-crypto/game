@@ -1,7 +1,7 @@
 import crypto from 'node:crypto';
 import { Server, Socket } from 'socket.io';
 import type { ClientToServerEvents, ServerToClientEvents, InterServerEvents, SocketData } from '../../../shared/src/protocol.js';
-import type { RoomSnapshot, PublicPlayer, AckResponse } from '../../../shared/src/types.js';
+import type { RoomSnapshot, PublicPlayer, AckResponse, Difficulty, QuizLanguage } from '../../../shared/src/types.js';
 import { GAME_CONSTANTS, PHASE_DURATIONS_MS } from '../../../shared/src/config.js';
 import type { Room, PlayerState, RoomStore, AnswerState } from './RoomStore.js';
 import { generateRoomCode } from './roomCodes.js';
@@ -25,12 +25,31 @@ export class RoomManager {
   }
 
   /** Create a new room. Returns { ok, data: { roomCode, sessionToken, playerId } } */
-  handleCreate(socket: AppSocket, data: { name: string }): AckResponse {
+  handleCreate(socket: AppSocket, data: {
+    name: string;
+    category?: string;
+    difficulty?: Difficulty;
+    questionCount?: number;
+    questionTimeSec?: number;
+    language?: QuizLanguage;
+  }): AckResponse {
     const nameResult = validateName(data?.name);
     if (!nameResult.valid) return { ok: false, error: nameResult.error, code: 'INVALID_NAME' };
 
     const code = generateRoomCode(this.store);
     const room = this.store.createRoom(code);
+
+    if (data?.category) room.category = data.category;
+    if (data?.difficulty) room.difficulty = data.difficulty;
+    if (data?.questionCount) {
+      room.questionCount = Math.max(5, Math.min(30, Number(data.questionCount) || 10));
+    }
+    if (data?.questionTimeSec) {
+      room.questionTimeMs = Math.max(5000, Math.min(60000, Number(data.questionTimeSec) * 1000));
+    }
+    if (data?.language === 'hi' || data?.language === 'en') {
+      room.language = data.language;
+    }
 
     const playerId = crypto.randomUUID();
     const sessionToken = crypto.randomBytes(16).toString('hex');
@@ -196,8 +215,14 @@ export class RoomManager {
       p.answers.clear();
     }
 
-    // Draw 10 questions avoiding previously used IDs
-    const questions = this.questionProvider.getGameSet(GAME_CONSTANTS.QUESTIONS_PER_GAME, room.usedQuestionIds);
+    // Draw questions according to room settings avoiding previously used IDs
+    const questions = this.questionProvider.getGameSet({
+      count: room.questionCount || GAME_CONSTANTS.QUESTIONS_PER_GAME,
+      category: room.category,
+      difficulty: room.difficulty,
+      language: room.language,
+      excludeIds: room.usedQuestionIds,
+    });
     for (const q of questions) {
       room.usedQuestionIds.add(q.id);
     }
@@ -309,14 +334,15 @@ export class RoomManager {
   private startQuestion(room: Room): void {
     if (room.phaseTimer) clearTimeout(room.phaseTimer);
 
+    const questionDuration = room.questionTimeMs || PHASE_DURATIONS_MS.QUESTION;
     room.phase = 'QUESTION_ACTIVE';
     room.questionStartedAt = Date.now();
-    room.phaseEndsAt = Date.now() + PHASE_DURATIONS_MS.QUESTION;
+    room.phaseEndsAt = Date.now() + questionDuration;
     this.broadcastState(room);
 
     room.phaseTimer = setTimeout(() => {
       this.transitionToReveal(room);
-    }, PHASE_DURATIONS_MS.QUESTION);
+    }, questionDuration);
   }
 
   private checkAllAnswered(room: Room): void {
@@ -529,8 +555,13 @@ export class RoomManager {
       serverNow: Date.now(),
       players,
       questionIndex: room.questionIndex,
-      totalQuestions: GAME_CONSTANTS.QUESTIONS_PER_GAME,
+      totalQuestions: room.questions.length > 0 ? room.questions.length : (room.questionCount || GAME_CONSTANTS.QUESTIONS_PER_GAME),
       selfId,
+      category: room.category,
+      difficulty: room.difficulty,
+      questionCount: room.questionCount,
+      questionTimeMs: room.questionTimeMs,
+      language: room.language,
     };
 
     if (room.phase === 'QUESTION_ACTIVE' || room.phase === 'REVEAL' || room.phase === 'SCOREBOARD') {

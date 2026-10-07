@@ -1,4 +1,5 @@
 import type { Room, RoomStore } from './RoomStore.js';
+import { GAME_CONSTANTS, PHASE_DURATIONS_MS } from '../../../shared/src/config.js';
 
 export class InMemoryRoomStore implements RoomStore {
   private rooms = new Map<string, Room>();
@@ -11,6 +12,11 @@ export class InMemoryRoomStore implements RoomStore {
       createdAt: Date.now(),
       lastActivityAt: Date.now(),
       players: new Map(),
+      category: 'mix',
+      difficulty: 'all',
+      questionCount: GAME_CONSTANTS.QUESTIONS_PER_GAME,
+      questionTimeMs: PHASE_DURATIONS_MS.QUESTION,
+      language: 'en',
       questions: [],
       questionIndex: -1,
       questionStartedAt: 0,

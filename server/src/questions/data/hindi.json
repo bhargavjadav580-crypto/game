@@ -1,26 +1,308 @@
 [
   {
-    "id": "hi-1",
-    "category": "Hindi",
-    "text": "भारत की राजधानी क्या है?",
-    "options": ["मुंबई", "दिल्ली", "कोलकाता", "चेन्नई"],
+    "id": "hi-sports-1",
+    "category": "Sports",
+    "text": "भारत का राष्ट्रीय खेल कौन सा माना जाता है?",
+    "options": ["क्रिकेट", "हॉकी", "कबड्डी", "फुटबॉल"],
     "correctIndex": 1,
-    "difficulty": "easy"
+    "difficulty": "easy",
+    "language": "hi"
   },
   {
-    "id": "hi-2",
-    "category": "Hindi",
-    "text": "निम्नलिखित में से कौन-सा भारतीय स्वतंत्रता संग्राम का प्रमुख नेता था?",
-    "options": ["सुभाष चंद्र बोस", "महात्मा गांधी", "जवाहर लाल नेहरू", "लाल बागी"],
-    "correctIndex": 0,
-    "difficulty": "medium"
-  },
-  {
-    "id": "hi-3",
-    "category": "Hindi",
-    "text": "भारत का राष्ट्रीय पक्षी कौन-सा है?",
-    "options": ["बाज", "गजराज", "भारत का मोर", "काबूतर"],
+    "id": "hi-sports-2",
+    "category": "Sports",
+    "text": "क्रिकेट विश्व कप 2011 में भारत के कप्तान कौन थे?",
+    "options": ["विराट कोहली", "सचिन तेंदुलकर", "महेंद्र सिंह धोनी", "सौरव गांगुली"],
     "correctIndex": 2,
-    "difficulty": "easy"
+    "difficulty": "easy",
+    "language": "hi"
+  },
+  {
+    "id": "hi-sports-3",
+    "category": "Sports",
+    "text": "ओलंपिक खेलों में व्यक्तिगत स्वर्ण पदक जीतने वाले पहले भारतीय कौन हैं?",
+    "options": ["अभिनव बिंद्रा", "नीरज चोपड़ा", "मिल्खा सिंह", "पीवी सिंधु"],
+    "correctIndex": 0,
+    "difficulty": "medium",
+    "language": "hi"
+  },
+  {
+    "id": "hi-sports-4",
+    "category": "Sports",
+    "text": "नीरज चोपड़ा किस खेल से संबंधित हैं?",
+    "options": ["कुश्ती", "भाला फेंक (जैवलीन थ्रो)", "निशानेबाजी", "मुक्केबाजी"],
+    "correctIndex": 1,
+    "difficulty": "easy",
+    "language": "hi"
+  },
+  {
+    "id": "hi-sports-5",
+    "category": "Sports",
+    "text": "टेनिस ग्रैंड स्लैम में लाल मिट्टी (Red Clay) पर कौन सा टूर्नामेंट खेला जाता है?",
+    "options": ["विंबलडन", "यूएस ओपन", "फ्रेंच ओपन", "ऑस्ट्रेलियन ओपन"],
+    "correctIndex": 2,
+    "difficulty": "medium",
+    "language": "hi"
+  },
+  {
+    "id": "hi-sports-6",
+    "category": "Sports",
+    "text": "शतरंज के बोर्ड पर कुल कितने वर्ग (Squares) होते हैं?",
+    "options": ["64", "54", "72", "48"],
+    "correctIndex": 0,
+    "difficulty": "easy",
+    "language": "hi"
+  },
+  {
+    "id": "hi-nature-1",
+    "category": "Nature",
+    "text": "पेड़-पौधे प्रकाश संश्लेषण (Photosynthesis) के दौरान कौन सी गैस छोड़ते हैं?",
+    "options": ["कार्बन डाइऑक्साइड", "ऑक्सीजन", "नाइट्रोजन", "मीथेन"],
+    "correctIndex": 1,
+    "difficulty": "easy",
+    "language": "hi"
+  },
+  {
+    "id": "hi-nature-2",
+    "category": "Nature",
+    "text": "विश्व का सबसे ऊँचा जलप्रपात (Water waterfall) कौन सा है?",
+    "options": ["नियाग्रा फॉल्स", "एंजेल फॉल्स", "विक्टोरिया फॉल्स", "जोग फॉल्स"],
+    "correctIndex": 1,
+    "difficulty": "medium",
+    "language": "hi"
+  },
+  {
+    "id": "hi-nature-3",
+    "category": "Nature",
+    "text": "वायुमंडल की किस परत में मौसम संबंधी लगभग सभी घटनाएं होती हैं?",
+    "options": ["समताप मंडल", "क्षोभ मंडल (Troposphere)", "मध्य मंडल", "आयन मंडल"],
+    "correctIndex": 1,
+    "difficulty": "medium",
+    "language": "hi"
+  },
+  {
+    "id": "hi-nature-4",
+    "category": "Nature",
+    "text": "भारत की सबसे लंबी नदी कौन सी है?",
+    "options": ["यमुना", "गोदावरी", "गंगा", "ब्रह्मपुत्र"],
+    "correctIndex": 2,
+    "difficulty": "easy",
+    "language": "hi"
+  },
+  {
+    "id": "hi-nature-5",
+    "category": "Nature",
+    "text": "दुनिया का सबसे बड़ा वर्षावन (Rainforest) कौन सा है?",
+    "options": ["कांगो वर्षावन", "अमेज़न वर्षावन", "सुंदरबन", "ताइगा"],
+    "correctIndex": 1,
+    "difficulty": "easy",
+    "language": "hi"
+  },
+  {
+    "id": "hi-animals-1",
+    "category": "Animals",
+    "text": "भारत का राष्ट्रीय पशु कौन सा है?",
+    "options": ["शेर", "बाघ (Tiger)", "हाथी", "तेंदुआ"],
+    "correctIndex": 1,
+    "difficulty": "easy",
+    "language": "hi"
+  },
+  {
+    "id": "hi-animals-2",
+    "category": "Animals",
+    "text": "पृथ्वी पर सबसे विशाल जीवित स्तनपायी (Mammal) कौन सा है?",
+    "options": ["अफ्रीकी हाथी", "ब्लू व्हेल", "जिराफ", "शार्क"],
+    "correctIndex": 1,
+    "difficulty": "easy",
+    "language": "hi"
+  },
+  {
+    "id": "hi-animals-3",
+    "category": "Animals",
+    "text": "कौन सा पक्षी उड़ नहीं सकता और सबसे तेज दौड़ता है?",
+    "options": ["पेंगुइन", "कीवी", "शुतुरमुर्ग (Ostrich)", "ईमू"],
+    "correctIndex": 2,
+    "difficulty": "easy",
+    "language": "hi"
+  },
+  {
+    "id": "hi-animals-4",
+    "category": "Animals",
+    "text": "ऑक्टोपस के पास कितने हृदय (Hearts) होते हैं?",
+    "options": ["1", "2", "3", "4"],
+    "correctIndex": 2,
+    "difficulty": "hard",
+    "language": "hi"
+  },
+  {
+    "id": "hi-animals-5",
+    "category": "Animals",
+    "text": "किस जानवर की याददाश्त (Memory) सबसे तेज मानी जाती है और वह डॉल्फिन की तरह समझदार है?",
+    "options": ["हाथी", "चिंपांजी", "कुत्ता", "घोड़ा"],
+    "correctIndex": 1,
+    "difficulty": "medium",
+    "language": "hi"
+  },
+  {
+    "id": "hi-science-1",
+    "category": "Science",
+    "text": "मानव शरीर की सबसे बड़ी हड्डी कौन सी है?",
+    "options": ["फीमर (जांघ की हड्डी)", "टिबिया", "स्टेप्स (कान की)", "ह्यूमरस"],
+    "correctIndex": 0,
+    "difficulty": "easy",
+    "language": "hi"
+  },
+  {
+    "id": "hi-science-2",
+    "category": "Science",
+    "text": "सूर्य के प्रकाश को पृथ्वी तक पहुँचने में लगभग कितना समय लगता है?",
+    "options": ["5 मिनट", "8 मिनट 20 सेकंड", "10 मिनट", "12 मिनट"],
+    "correctIndex": 1,
+    "difficulty": "easy",
+    "language": "hi"
+  },
+  {
+    "id": "hi-science-3",
+    "category": "Science",
+    "text": "पानी का रासायनिक सूत्र क्या है?",
+    "options": ["CO2", "H2O", "O2", "NaCl"],
+    "correctIndex": 1,
+    "difficulty": "easy",
+    "language": "hi"
+  },
+  {
+    "id": "hi-science-4",
+    "category": "Science",
+    "text": "गुरुत्वाकर्षण (Gravity) का नियम किसने दिया था?",
+    "options": ["अल्बर्ट आइंस्टीन", "सर आइजैक न्यूटन", "गैलीलियो", "थॉमस एडिसन"],
+    "correctIndex": 1,
+    "difficulty": "easy",
+    "language": "hi"
+  },
+  {
+    "id": "hi-science-5",
+    "category": "Science",
+    "text": "हवा में ध्वनि की गति लगभग कितनी होती है?",
+    "options": ["150 मी/से", "343 मी/से", "500 मी/से", "300000 किमी/से"],
+    "correctIndex": 1,
+    "difficulty": "medium",
+    "language": "hi"
+  },
+  {
+    "id": "hi-history-1",
+    "category": "History",
+    "text": "भारत किस वर्ष आज़ाद हुआ था?",
+    "options": ["1942", "1947", "1950", "1952"],
+    "correctIndex": 1,
+    "difficulty": "easy",
+    "language": "hi"
+  },
+  {
+    "id": "hi-history-2",
+    "category": "History",
+    "text": "ताजमहल का निर्माण किस मुगल शासक ने करवाया था?",
+    "options": ["अकबर", "बाबर", "शाहजहाँ", "जहाँगीर"],
+    "correctIndex": 2,
+    "difficulty": "easy",
+    "language": "hi"
+  },
+  {
+    "id": "hi-history-3",
+    "category": "History",
+    "text": "महात्मा गांधी ने दांडी यात्रा किस वर्ष शुरू की थी?",
+    "options": ["1920", "1930", "1942", "1919"],
+    "correctIndex": 1,
+    "difficulty": "medium",
+    "language": "hi"
+  },
+  {
+    "id": "hi-history-4",
+    "category": "History",
+    "text": "भारतीय संविधान के जनक के रूप में किसे जाना जाता है?",
+    "options": ["डॉ. राजेंद्र प्रसाद", "महात्मा गांधी", "डॉ. भीमराव अंबेडकर", "सरदार पटेल"],
+    "correctIndex": 2,
+    "difficulty": "easy",
+    "language": "hi"
+  },
+  {
+    "id": "hi-history-5",
+    "category": "History",
+    "text": "पानीपत की पहली लड़ाई किस वर्ष लड़ी गई थी?",
+    "options": ["1526", "1556", "1761", "1500"],
+    "correctIndex": 0,
+    "difficulty": "medium",
+    "language": "hi"
+  },
+  {
+    "id": "hi-geo-1",
+    "category": "Geography",
+    "text": "भारत की राजधानी क्या है?",
+    "options": ["मुंबई", "नई दिल्ली", "कोलकाता", "चेन्नई"],
+    "correctIndex": 1,
+    "difficulty": "easy",
+    "language": "hi"
+  },
+  {
+    "id": "hi-geo-2",
+    "category": "Geography",
+    "text": "विश्व का सबसे बड़ा महाद्वीप कौन सा है?",
+    "options": ["अफ्रीका", "यूरोप", "एशिया", "उत्तरी अमेरिका"],
+    "correctIndex": 2,
+    "difficulty": "easy",
+    "language": "hi"
+  },
+  {
+    "id": "hi-geo-3",
+    "category": "Geography",
+    "text": "किस देश को 'उगते सूरज की भूमि' कहा जाता है?",
+    "options": ["चीन", "जापान", "नॉर्वे", "भारत"],
+    "correctIndex": 1,
+    "difficulty": "easy",
+    "language": "hi"
+  },
+  {
+    "id": "hi-geo-4",
+    "category": "Geography",
+    "text": "भारत का सबसे बड़ा राज्य क्षेत्रफल के अनुसार कौन सा है?",
+    "options": ["उत्तर प्रदेश", "महाराष्ट्र", "राजस्थान", "मध्य प्रदेश"],
+    "correctIndex": 2,
+    "difficulty": "medium",
+    "language": "hi"
+  },
+  {
+    "id": "hi-geo-5",
+    "category": "Geography",
+    "text": "कर्क रेखा भारत के कितने राज्यों से होकर गुजरती है?",
+    "options": ["6", "7", "8", "9"],
+    "correctIndex": 2,
+    "difficulty": "medium",
+    "language": "hi"
+  },
+  {
+    "id": "hi-logic-1",
+    "category": "Logic",
+    "text": "यदि एक पंक्ति में आपका स्थान दोनों छोर से 11वाँ है, तो पंक्ति में कुल कितने व्यक्ति हैं?",
+    "options": ["20", "21", "22", "19"],
+    "correctIndex": 1,
+    "difficulty": "medium",
+    "language": "hi"
+  },
+  {
+    "id": "hi-logic-2",
+    "category": "Logic",
+    "text": "संख्या श्रृंखला पूरी करें: 2, 4, 8, 16, ?",
+    "options": ["24", "32", "30", "64"],
+    "correctIndex": 1,
+    "difficulty": "easy",
+    "language": "hi"
+  },
+  {
+    "id": "hi-logic-3",
+    "category": "Logic",
+    "text": "एक लीप वर्ष (Leap Year) में कितने दिन होते हैं?",
+    "options": ["365", "366", "364", "367"],
+    "correctIndex": 1,
+    "difficulty": "easy",
+    "language": "hi"
   }
 ]

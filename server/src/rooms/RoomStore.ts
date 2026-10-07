@@ -1,4 +1,4 @@
-import type { GamePhase, ServerQuestion, Difficulty } from '../../../shared/src/types.js';
+import type { GamePhase, ServerQuestion, Difficulty, QuizLanguage } from '../../../shared/src/types.js';
 
 export interface PlayerState {
   id: string;
@@ -31,6 +31,12 @@ export interface Room {
   createdAt: number;
   lastActivityAt: number;
   players: Map<string, PlayerState>;
+  // Game settings
+  category: string;
+  difficulty: Difficulty;
+  questionCount: number;
+  questionTimeMs: number;
+  language: QuizLanguage;
   // Game state
   questions: ServerQuestion[];
   questionIndex: number;

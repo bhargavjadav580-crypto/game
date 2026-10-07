@@ -1,6 +1,7 @@
 import { useEffect, useState, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useSocket } from '../hooks/useSocket';
+import { useTranslation } from '../i18n';
 import { soundManager } from '../utils/sound';
 import '../styles/buttons.css';
 import './GamePage.css';
@@ -18,11 +19,19 @@ export default function GamePage() {
     leaveRoom,
     rejoinRoom,
   } = useSocket();
+  const { t, lang, setLang } = useTranslation();
 
   const [selectedOption, setSelectedOption] = useState<number | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [timeLeftMs, setTimeLeftMs] = useState(0);
   const [isMuted, setIsMuted] = useState(soundManager.getMuted());
+
+  // Automatically sync client language with room language when room loads
+  useEffect(() => {
+    if (snapshot?.language && snapshot.language !== lang) {
+      setLang(snapshot.language);
+    }
+  }, [snapshot?.language, lang, setLang]);
 
   // Attempt rejoin if no active snapshot
   useEffect(() => {
@@ -98,41 +107,45 @@ export default function GamePage() {
   useEffect(() => {
     if (!snapshot) return;
     if (snapshot.phase === 'STARTING') {
-      soundManager.playCountdownTick();
+      soundManager.play('countdown');
+    } else if (snapshot.phase === 'QUESTION_ACTIVE') {
+      soundManager.play('question');
     } else if (snapshot.phase === 'REVEAL') {
       const myAnswer = selfPlayer?.currentAnswer;
-      if (myAnswer) {
-        if (myAnswer.correct) {
-          soundManager.playCorrect();
-        } else {
-          soundManager.playWrong();
-        }
+      if (myAnswer?.correct) {
+        soundManager.play('correct');
       } else {
-        soundManager.playTimeUp();
+        soundManager.play('wrong');
       }
     } else if (snapshot.phase === 'FINISHED') {
-      soundManager.playWinner();
+      soundManager.play('gameover');
     }
   }, [snapshot?.phase, selfPlayer?.currentAnswer]);
 
-  const handleToggleMute = () => {
-    const next = soundManager.toggleMute();
-    setIsMuted(next);
+  const handleSelectOption = async (optionIndex: number) => {
+    if (
+      selectedOption !== null ||
+      submitting ||
+      snapshot?.phase !== 'QUESTION_ACTIVE' ||
+      !snapshot.currentQuestion
+    ) {
+      return;
+    }
+
+    setSelectedOption(optionIndex);
+    setSubmitting(true);
+    soundManager.play('click');
+
+    const result = await submitAnswer(snapshot.currentQuestion.id, optionIndex);
+    if (!result.ok) {
+      console.error('Answer submission failed:', result.error);
+    }
+    setSubmitting(false);
   };
 
-  const handleSelectOption = async (index: number) => {
-    if (selectedOption !== null || submitting || !snapshot?.currentQuestion) return;
-    setSelectedOption(index);
-    setSubmitting(true);
-    soundManager.playSelect();
-
-    try {
-      await submitAnswer(snapshot.currentQuestion.id, index);
-    } catch {
-      // Revert if socket failed
-    } finally {
-      setSubmitting(false);
-    }
+  const handleToggleMute = () => {
+    const muted = soundManager.toggleMute();
+    setIsMuted(muted);
   };
 
   const handleLeave = async () => {
@@ -144,9 +157,9 @@ export default function GamePage() {
 
   if (!snapshot) {
     return (
-      <main className="game-container">
-        <div className="game-card text-center">
-          <p className="loading-text">Connecting to game session…</p>
+      <main className="page-center">
+        <div className="form-card" style={{ textAlign: 'center' }}>
+          <p style={{ color: 'var(--text-muted)' }}>{t('lobby.reconnecting')}</p>
         </div>
       </main>
     );
@@ -158,11 +171,11 @@ export default function GamePage() {
     return (
       <main className="game-container">
         <div className="countdown-card">
-          <p className="countdown-subtitle">GET READY!</p>
+          <p className="countdown-subtitle">{t('game.getReady')}</p>
           <div className="countdown-number" key={countdownSec}>
             {countdownSec}
           </div>
-          <p className="countdown-hint">Game is starting…</p>
+          <p className="countdown-hint">{t('game.startingIn')}</p>
         </div>
       </main>
     );
@@ -171,16 +184,19 @@ export default function GamePage() {
   // 2. QUESTION ACTIVE PHASE
   if (snapshot.phase === 'QUESTION_ACTIVE') {
     const q = snapshot.currentQuestion;
-    const progressPercent = Math.max(0, Math.min(100, (timeLeftMs / 8000) * 100));
+    const totalDuration = snapshot.questionTimeMs || 15000;
+    const progressPercent = Math.max(0, Math.min(100, (timeLeftMs / totalDuration) * 100));
     const secondsRemaining = (timeLeftMs / 1000).toFixed(1);
 
     return (
       <main className="game-container">
         <div className="game-wrapper">
-          {!connected && <div className="connection-banner">Reconnecting…</div>}
+          {!connected && <div className="connection-banner">{t('lobby.reconnecting')}</div>}
 
           <div className="game-header">
-            <span className="question-category">{q?.category || 'General Knowledge'}</span>
+            <span className="question-category">
+              {q?.category ? (t(`category.${q.category.toLowerCase()}`) !== `category.${q.category.toLowerCase()}` ? t(`category.${q.category.toLowerCase()}`) : q.category) : t('category.mix')}
+            </span>
             <div className="game-header-actions">
               <button
                 type="button"
@@ -191,14 +207,17 @@ export default function GamePage() {
                 {isMuted ? '🔇' : '🔊'}
               </button>
               <span className="question-badge">
-                Question {(snapshot.questionIndex ?? 0) + 1} of {snapshot.totalQuestions}
+                {t('game.round', {
+                  current: (snapshot.questionIndex ?? 0) + 1,
+                  total: snapshot.totalQuestions,
+                })}
               </span>
             </div>
           </div>
 
           <div className="timer-track" role="progressbar" aria-valuenow={progressPercent} aria-valuemin={0} aria-valuemax={100}>
             <div
-              className={`timer-bar ${timeLeftMs < 2500 ? 'timer-danger' : ''}`}
+              className={`timer-bar ${timeLeftMs < 3000 ? 'timer-danger' : ''}`}
               style={{ width: `${progressPercent}%` }}
             />
           </div>
@@ -230,11 +249,11 @@ export default function GamePage() {
 
           <div className="status-footer" aria-live="polite">
             {selfPlayer?.hasAnswered || selectedOption !== null ? (
-              <span className="status-locked">✓ Answer locked — waiting for others…</span>
+              <span className="status-locked">{t('game.answered')}</span>
             ) : timeLeftMs <= 0 ? (
-              <span className="status-timeout">Time's Up!</span>
+              <span className="status-timeout">{t('game.timesUp')}</span>
             ) : (
-              <span className="status-waiting">Choose your answer fast for higher points!</span>
+              <span className="status-waiting">{t('app.tagline')}</span>
             )}
           </div>
         </div>
@@ -252,7 +271,7 @@ export default function GamePage() {
       <main className="game-container">
         <div className="game-wrapper">
           <div className="game-header">
-            <span className="question-badge">Reveal</span>
+            <span className="question-badge">{t('game.round', { current: (snapshot.questionIndex ?? 0) + 1, total: snapshot.totalQuestions })}</span>
             <span className="question-category">{q?.category}</span>
           </div>
 
@@ -284,13 +303,15 @@ export default function GamePage() {
             {myAnswer ? (
               wasCorrect ? (
                 <div className="feedback-correct">
-                  🎉 Correct! +{myAnswer.scoreGained} pts
+                  {t('game.correct')} +{myAnswer.scoreGained} {t('game.points')}
                 </div>
               ) : (
-                <div className="feedback-wrong">❌ Incorrect (+0 pts)</div>
+                <div className="feedback-wrong">
+                  {t('game.wrong')} (+0 {t('game.points')})
+                </div>
               )
             ) : (
-              <div className="feedback-timeout">⏰ Time expired (+0 pts)</div>
+              <div className="feedback-timeout">⏰ {t('game.timesUp')} (+0 {t('game.points')})</div>
             )}
           </div>
         </div>
@@ -305,9 +326,12 @@ export default function GamePage() {
     return (
       <main className="game-container">
         <div className="scoreboard-wrapper">
-          <h1 className="scoreboard-title">Leaderboard</h1>
+          <h1 className="scoreboard-title">{t('game.leaderboard')}</h1>
           <p className="scoreboard-subtitle">
-            Round {(snapshot.questionIndex ?? 0) + 1} of {snapshot.totalQuestions}
+            {t('game.round', {
+              current: (snapshot.questionIndex ?? 0) + 1,
+              total: snapshot.totalQuestions,
+            })}
           </p>
 
           <div className="leaderboard-list">
@@ -318,13 +342,13 @@ export default function GamePage() {
                   <span className="rank-num">#{idx + 1}</span>
                   <div className="player-meta">
                     <span className="player-display-name">
-                      {p.name} {isMe && '(You)'}
+                      {p.name} {isMe && t('lobby.you')}
                     </span>
                     {p.currentAnswer?.scoreGained ? (
-                      <span className="pts-delta">+{p.currentAnswer.scoreGained} pts</span>
+                      <span className="pts-delta">+{p.currentAnswer.scoreGained} {t('game.points')}</span>
                     ) : null}
                   </div>
-                  <span className="player-score-tag">{p.score} pts</span>
+                  <span className="player-score-tag">{p.score} {t('game.points')}</span>
                 </div>
               );
             })}
@@ -349,13 +373,13 @@ export default function GamePage() {
         <div className="results-wrapper">
           <div className="winner-podium">
             <span className="winner-trophy" aria-hidden="true">🏆</span>
-            <p className="winner-caption">CHAMPION</p>
+            <p className="winner-caption">{t('game.winner')}</p>
             <h1 className="winner-name">{winner?.name}</h1>
-            <p className="winner-score">{winner?.score} Points</p>
+            <p className="winner-score">{winner?.score} {t('game.points')}</p>
           </div>
 
           <div className="final-ranks">
-            <h2 className="final-ranks-heading">Final Standings</h2>
+            <h2 className="final-ranks-heading">{t('game.finalLeaderboard')}</h2>
             <div className="leaderboard-list">
               {sorted.map((p, idx) => {
                 const isMe = p.id === snapshot.selfId;
@@ -363,11 +387,13 @@ export default function GamePage() {
                   <div key={p.id} className={`leaderboard-item ${isMe ? 'leaderboard-self' : ''}`}>
                     <span className="rank-num">#{idx + 1}</span>
                     <span className="player-display-name">
-                      {p.name} {isMe && '(You)'}
+                      {p.name} {isMe && t('lobby.you')}
                     </span>
                     <div className="player-details">
-                      <span className="accuracy-badge">{p.totalCorrect}/10 correct</span>
-                      <span className="player-score-tag">{p.score} pts</span>
+                      <span className="accuracy-badge">
+                        {p.totalCorrect}/{snapshot.totalQuestions} {t('game.correct')}
+                      </span>
+                      <span className="player-score-tag">{p.score} {t('game.points')}</span>
                     </div>
                   </div>
                 );
@@ -378,13 +404,13 @@ export default function GamePage() {
           <div className="results-actions">
             {isHost ? (
               <button className="btn btn-primary btn-lg btn-block" onClick={() => requestRematch()}>
-                🔄 Play Again
+                {t('btn.playAgain')}
               </button>
             ) : (
-              <p className="waiting-rematch">Waiting for host to restart game…</p>
+              <p className="waiting-rematch">{t('lobby.waitingHost')}</p>
             )}
             <button className="btn btn-secondary btn-block" onClick={handleLeave}>
-              Leave Room
+              {t('btn.leave')}
             </button>
           </div>
         </div>
