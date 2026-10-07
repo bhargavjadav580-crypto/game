@@ -105,3 +105,20 @@
   20%, 60% { transform: translateX(-6px); }
   40%, 80% { transform: translateX(6px); }
 }
+
+@media (max-width: 480px) {
+  .page-center {
+    padding: var(--space-sm);
+    padding-top: max(var(--space-sm), var(--safe-top));
+    padding-bottom: max(var(--space-sm), var(--safe-bottom));
+  }
+
+  .form-card {
+    padding: var(--space-xl) var(--space-md);
+    border-radius: var(--radius-lg);
+  }
+
+  .form-title {
+    font-size: 1.75rem;
+  }
+}

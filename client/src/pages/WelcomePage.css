@@ -99,12 +99,31 @@
   white-space: nowrap;
 }
 
-@media (max-width: 375px) {
+@media (max-width: 480px) {
   .welcome {
-    padding: var(--space-md);
+    padding: var(--space-sm);
+    padding-top: max(var(--space-sm), var(--safe-top));
+    padding-bottom: max(var(--space-sm), var(--safe-bottom));
+  }
+
+  .welcome-content {
+    gap: var(--space-xl);
+  }
+
+  .welcome-title {
+    font-size: clamp(2.2rem, 11vw, 2.75rem);
+  }
+
+  .welcome-tagline {
+    font-size: 1rem;
   }
 
   .welcome-features {
     gap: 6px;
+  }
+
+  .feature {
+    font-size: 0.75rem;
+    padding: 5px 10px;
   }
 }

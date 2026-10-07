@@ -211,20 +211,43 @@
   animation: pulse 2s ease-in-out infinite;
 }
 
-@media (max-width: 375px) {
+@media (max-width: 480px) {
   .lobby {
-    padding: var(--space-md);
+    padding: var(--space-sm);
+    padding-top: max(var(--space-sm), var(--safe-top));
+    padding-bottom: max(var(--space-sm), var(--safe-bottom));
+  }
+
+  .lobby-content {
+    gap: var(--space-md);
   }
 
   .lobby-header {
-    padding: var(--space-xl);
+    padding: var(--space-lg);
+    border-radius: var(--radius-lg);
   }
 
   .lobby-code {
-    font-size: var(--font-size-2xl);
+    font-size: clamp(2rem, 9vw, 2.5rem);
+    letter-spacing: 0.18em;
+    margin-bottom: var(--space-md);
   }
 
   .lobby-share-actions {
     flex-direction: column;
+    width: 100%;
+  }
+
+  .lobby-share-actions .btn {
+    width: 100%;
+  }
+
+  .lobby-players {
+    padding: var(--space-md);
+    border-radius: var(--radius-lg);
+  }
+
+  .player-item {
+    padding: 0.65rem 0.85rem;
   }
 }

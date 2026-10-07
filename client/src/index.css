@@ -123,8 +123,11 @@ body {
   font-size: var(--font-size-base);
   color: var(--text);
   line-height: 1.45;
+  min-height: 100vh;
   min-height: 100dvh;
   overflow-x: hidden;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
   touch-action: manipulation;
   background: linear-gradient(135deg, var(--bg-gradient-start) 0%, var(--bg-gradient-mid) 50%, var(--bg-gradient-end) 100%);
   background-attachment: fixed;
