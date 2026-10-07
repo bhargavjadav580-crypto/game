@@ -1,6 +1,7 @@
 import { useEffect, useState, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useSocket } from '../hooks/useSocket';
+import { soundManager } from '../utils/sound';
 import '../styles/buttons.css';
 import './GamePage.css';
 
@@ -23,6 +24,7 @@ export default function GamePage() {
   const [selectedOption, setSelectedOption] = useState<number | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [timeLeftMs, setTimeLeftMs] = useState(0);
+  const [isMuted, setIsMuted] = useState(soundManager.getMuted());
 
   // Attempt rejoin if no active snapshot
   useEffect(() => {
@@ -94,10 +96,37 @@ export default function GamePage() {
 
   const isHost = selfPlayer?.isHost ?? false;
 
+  // Trigger sound effects on phase change
+  useEffect(() => {
+    if (!snapshot) return;
+    if (snapshot.phase === 'STARTING') {
+      soundManager.playCountdownTick();
+    } else if (snapshot.phase === 'REVEAL') {
+      const myAnswer = selfPlayer?.currentAnswer;
+      if (myAnswer) {
+        if (myAnswer.correct) {
+          soundManager.playCorrect();
+        } else {
+          soundManager.playWrong();
+        }
+      } else {
+        soundManager.playTimeUp();
+      }
+    } else if (snapshot.phase === 'FINISHED') {
+      soundManager.playWinner();
+    }
+  }, [snapshot?.phase, selfPlayer?.currentAnswer]);
+
+  const handleToggleMute = () => {
+    const next = soundManager.toggleMute();
+    setIsMuted(next);
+  };
+
   const handleSelectOption = async (index: number) => {
     if (selectedOption !== null || submitting || !snapshot?.currentQuestion) return;
     setSelectedOption(index);
     setSubmitting(true);
+    soundManager.playSelect();
 
     try {
       await submitAnswer(snapshot.currentQuestion.id, index);
@@ -154,9 +183,19 @@ export default function GamePage() {
 
           <div className="game-header">
             <span className="question-category">{q?.category || 'General Knowledge'}</span>
-            <span className="question-badge">
-              Question {(snapshot.questionIndex ?? 0) + 1} of {snapshot.totalQuestions}
-            </span>
+            <div className="game-header-actions">
+              <button
+                type="button"
+                className="mute-btn"
+                onClick={handleToggleMute}
+                aria-label={isMuted ? 'Unmute sounds' : 'Mute sounds'}
+              >
+                {isMuted ? '🔇' : '🔊'}
+              </button>
+              <span className="question-badge">
+                Question {(snapshot.questionIndex ?? 0) + 1} of {snapshot.totalQuestions}
+              </span>
+            </div>
           </div>
 
           <div className="timer-track" role="progressbar" aria-valuenow={progressPercent} aria-valuemin={0} aria-valuemax={100}>

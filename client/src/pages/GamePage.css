@@ -23,6 +23,30 @@
   align-items: center;
 }
 
+.game-header-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
+.mute-btn {
+  background: var(--surface-raised);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-full);
+  padding: 4px 8px;
+  font-size: 1rem;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: all var(--transition-fast);
+}
+
+.mute-btn:hover {
+  background: var(--surface);
+  border-color: var(--primary);
+}
+
 .question-category {
   font-size: var(--font-size-sm);
   color: var(--text-muted);
