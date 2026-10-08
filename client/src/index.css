@@ -184,6 +184,19 @@ body::after {
   z-index: 1;
 }
 
+/* Page centering layout utility */
+.page-center {
+  min-height: 100vh;
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 5.5rem 1.5rem 3rem 1.5rem;
+  width: 100%;
+  margin: 0 auto;
+}
+
 a {
   color: var(--accent-cyan);
   text-decoration: none;
