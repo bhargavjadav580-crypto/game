@@ -4,7 +4,7 @@
   "main": "dist/index.js",
   "type": "module",
   "scripts": {
-    "dev": "ts-node-dev --respawn --transpile-only src/index.ts",
+    "dev": "tsx watch src/index.ts",
     "build": "tsc -p . && node -e \"fs.cpSync('src/questions/data', 'dist/questions/data', { recursive: true, force: true })\"",
     "start": "node dist/index.js"
   },
@@ -19,6 +19,7 @@
     "typescript": "^5.5.0"
   },
   "devDependencies": {
-    "ts-node-dev": "^2.0.0"
+    "ts-node-dev": "^2.0.0",
+    "tsx": "^4.19.0"
   }
 }

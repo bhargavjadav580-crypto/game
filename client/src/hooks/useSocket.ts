@@ -52,51 +52,61 @@ export function useSocket() {
     };
   }, []);
 
+  const emitWithTimeout = (
+    eventName: string,
+    payload?: any,
+    timeoutMs = 7000
+  ): Promise<AckResponse> => {
+    if (!socket.connected) {
+      socket.connect();
+    }
+    return new Promise((resolve) => {
+      const timer = setTimeout(() => {
+        resolve({ ok: false, error: 'Connection timeout. Please check your internet connection.' });
+      }, timeoutMs);
+
+      const ack = (res: AckResponse) => {
+        clearTimeout(timer);
+        resolve(res);
+      };
+
+      if (payload !== undefined) {
+        socket.emit(eventName as any, payload, ack);
+      } else {
+        socket.emit(eventName as any, ack);
+      }
+    });
+  };
+
   const createRoom = useCallback((params: string | CreateRoomParams): Promise<AckResponse> => {
     const payload = typeof params === 'string' ? { name: params } : params;
-    return new Promise((resolve) => {
-      socket.emit('room:create', payload, (res) => resolve(res));
-    });
+    return emitWithTimeout('room:create', payload);
   }, []);
 
   const joinRoom = useCallback((code: string, name: string): Promise<AckResponse> => {
-    return new Promise((resolve) => {
-      socket.emit('room:join', { code, name }, (res) => resolve(res));
-    });
+    return emitWithTimeout('room:join', { code, name });
   }, []);
 
   const rejoinRoom = useCallback((code: string, sessionToken: string): Promise<AckResponse> => {
-    return new Promise((resolve) => {
-      socket.emit('room:rejoin', { code, sessionToken }, (res) => resolve(res));
-    });
+    return emitWithTimeout('room:rejoin', { code, sessionToken });
   }, []);
 
   const leaveRoom = useCallback((): Promise<AckResponse> => {
-    return new Promise((resolve) => {
-      socket.emit('room:leave', (res) => {
-        versionRef.current = 0;
-        setSnapshot(null);
-        resolve(res);
-      });
-    });
+    versionRef.current = 0;
+    setSnapshot(null);
+    return emitWithTimeout('room:leave');
   }, []);
 
   const startGame = useCallback((): Promise<AckResponse> => {
-    return new Promise((resolve) => {
-      socket.emit('game:start', (res) => resolve(res));
-    });
+    return emitWithTimeout('game:start');
   }, []);
 
   const submitAnswer = useCallback((questionId: string, optionIndex: number): Promise<AckResponse> => {
-    return new Promise((resolve) => {
-      socket.emit('answer:submit', { questionId, optionIndex }, (res) => resolve(res));
-    });
+    return emitWithTimeout('answer:submit', { questionId, optionIndex });
   }, []);
 
   const requestRematch = useCallback((): Promise<AckResponse> => {
-    return new Promise((resolve) => {
-      socket.emit('game:rematch', (res) => resolve(res));
-    });
+    return emitWithTimeout('game:rematch');
   }, []);
 
   const resetState = useCallback(() => {
