@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "npx tsx watch src/index.ts",
-    "build": "tsc -p . && node -e \"fs.cpSync('src/questions/data', 'dist/questions/data', { recursive: true, force: true })\"",
+    "build": "tsc -p . && node --input-type=module -e \"import fs from 'node:fs'; fs.cpSync('src/questions/data', 'dist/questions/data', { recursive: true, force: true })\"",
     "start": "node dist/index.js"
   },
   "dependencies": {
