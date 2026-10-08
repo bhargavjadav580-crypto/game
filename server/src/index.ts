@@ -53,6 +53,16 @@ app.get('/healthz', (_req, res) => {
   res.status(200).json({ status: 'ok', uptime: process.uptime(), rooms: store.roomCount() });
 });
 
+// Leaderboard endpoint
+app.get('/leaderboard', (req, res) => {
+  try {
+    const data = roomManager.getLeaderboard();
+    res.json({ status: 'ok', leaderboard: data });
+  } catch (err) {
+    console.error('Leaderboard error', err);
+    res.status(500).json({ status: 'error', error: 'Failed to get leaderboard' });
+  }
+});
 // Serve the built client if available
 const candidates = [
   path.join(process.cwd(), 'client/dist'),

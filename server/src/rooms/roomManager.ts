@@ -14,6 +14,8 @@ type AppSocket = Socket<ClientToServerEvents, ServerToClientEvents, InterServerE
 type AppServer = Server<ClientToServerEvents, ServerToClientEvents, InterServerEvents, SocketData>;
 
 export class RoomManager {
+  // In‑memory leaderboard (username → highest score)
+  private leaderboard: Map<string, number> = new Map();
   private questionProvider: QuestionProvider;
 
   constructor(
@@ -401,11 +403,14 @@ export class RoomManager {
 
   private transitionToFinished(room: Room): void {
     if (room.phaseTimer) clearTimeout(room.phaseTimer);
-
+    // Update leaderboard with final scores of all players
+    for (const p of room.players.values()) {
+      const existing = this.leaderboard.get(p.name) || 0;
+      if (p.score > existing) this.leaderboard.set(p.name, p.score);
+    }
     room.phase = 'FINISHED';
     room.phaseEndsAt = 0;
     this.broadcastState(room);
-
     setTimeout(() => {
       const current = this.store.getRoom(room.code);
       if (current && current.phase === 'FINISHED') {
@@ -413,6 +418,10 @@ export class RoomManager {
       }
     }, GAME_CONSTANTS.FINISHED_ROOM_CLEANUP_MS);
   }
+
+
+
+
 
   /** Handle socket disconnect */
   handleDisconnect(socket: AppSocket): void {
@@ -612,4 +621,12 @@ export class RoomManager {
     }
     return count;
   }
+
+  /** Retrieve leaderboard sorted descending by score */
+  public getLeaderboard(): { name: string; score: number }[] {
+    const entries = Array.from(this.leaderboard.entries());
+    entries.sort((a, b) => b[1] - a[1]);
+    return entries.map(([name, score]) => ({ name, score }));
+  }
+
 }
